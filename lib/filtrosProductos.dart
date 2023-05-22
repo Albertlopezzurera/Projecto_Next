@@ -24,7 +24,6 @@ class filtrosProductos{
         }
       }
     );
-    List<String> listaSinDuplicados = listaCategorias.toList();
     return filtrosProductos(jsonList);
   }
 

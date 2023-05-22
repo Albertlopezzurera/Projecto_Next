@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:projectobueno/myapp.dart';
 import 'package:projectobueno/paginaPrincipal.dart';
 
 class recuperacionPass extends StatelessWidget {
@@ -47,18 +48,19 @@ class _RecuperacionPassState extends State<RecPass> {
               ),
             ),
           ],
-        ), bottomNavigationBar: Container(
-      margin: EdgeInsets.all(16), // Margen alrededor del botón
-      child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => paginaPrincipal()), //TODO
-          );
-        },
-        child: Text('Recuperar Contraseña'),
-      ),
-    )
-    );
+        ),
+        bottomNavigationBar: Container(
+          margin: EdgeInsets.all(16), // Margen alrededor del botón
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => paginaPrincipal(usuario)), //TODO
+              );
+            },
+            child: Text('Recuperar Contraseña'),
+          ),
+        ));
   }
 }

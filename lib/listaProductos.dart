@@ -1,17 +1,25 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:projectobueno/cameraQR.dart';
+import 'package:projectobueno/filtrosProductos.dart';
+import 'package:projectobueno/myapp.dart';
 import 'package:projectobueno/newInventario.dart';
+import 'package:projectobueno/paginaPrincipal.dart';
 
-const List<String> categorias = ['Bebidas', 'Carnes', 'Limpieza'];
-const List<String> subcategorias = ['Bebidas/Refrescos','Bebidas/Cafeterias', 'Bebidas/Licores'];
-const List<String> tiposConservacion = ['Congelados', 'Refrigerados', 'Ambiente'];
+import 'llamadaApi.dart';
+
 const List<String> opcionOrdenacion = ['ASC', 'DESC'];
-const List<String> criteriosOrdenacion = ['Codigo','Descripción','Categoria','Categoria/Subcategoria','Tipo de conservación'];
-List<bool> categoriasChecked = List.generate(
-  categorias.length,
-      (index) => false,
-);
+const List<String> criteriosOrdenacion = [
+  'Codigo',
+  'Descripción',
+  'Categoria',
+  'Categoria/Subcategoria',
+  'Tipo de conservación'
+];
 
 class ListaProductos extends StatefulWidget {
   final String title;
@@ -76,9 +84,7 @@ class _ListaProductosState extends State<ListaProductos> {
           ),
           IconButton(
             icon: Icon(Icons.add_box_outlined),
-            onPressed: () {
-              buildFiltros(context);
-            },
+            onPressed: _showFiltrosDialog,
           ),
         ],
       );
@@ -87,37 +93,86 @@ class _ListaProductosState extends State<ListaProductos> {
 
   @override
   Widget build(BuildContext context) {
+    filtrosProductos;
     return Scaffold(
       appBar: buildAppBar(context),
       drawer: Drawer(
         child: Column(
           children: [
-            DrawerHeader(child: Text('Buscar Lista Inventarios')),
-            GestureDetector(
+            Row(
+              children: [
+                Image.asset(
+                  'assets/images/logo.png',
+                  alignment: Alignment.centerLeft,
+                  width: 70,
+                  height: 70,
+                ),
+                SizedBox(width: 8), // Espacio entre el logo y el texto
+                Expanded(
+                  child: Text(
+                    'NEXTT.DIRECTOR APP',
+                    textAlign: TextAlign.left,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Column(
+              children: [
+                Text(usuario.nombre),
+                Text(usuario.dominio),
+                SizedBox(height: 60,)
+              ],
+            ),
+            // Resto del código...
+            InkWell(
               onTap: () {
-                print('Nuevo inventario');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => newInventario(usuario)),
+                );
               },
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.add_box_outlined),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => newInventario(usuario)),
+                      );
+                    },
                   ),
                   const SizedBox(width: 8),
-                  // Agrega un espacio entre el icono y el texto
                   Text('Nuevo inventario'),
                 ],
               ),
             ),
-            GestureDetector(
+            InkWell(
               onTap: () {
-                print('Lista de inventarios');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => paginaPrincipal(usuario)),
+                );
               },
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.library_books),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => paginaPrincipal(usuario)),
+                      );
+                    },
                   ),
                   const SizedBox(width: 8),
                   // Agrega un espacio entre el icono y el texto
@@ -125,9 +180,35 @@ class _ListaProductosState extends State<ListaProductos> {
                 ],
               ),
             ),
-            GestureDetector(
+            InkWell(
+              splashColor: Colors.grey,
               onTap: () {
-                print('Cerrar sesion');
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('ATENCIÓN!'),
+                      content: Text("Está seguro que quiere cerrar la sesión?"),
+                      actions: <Widget>[
+                        TextButton(
+                          child: Text("No"),
+                          onPressed: () {
+                            Navigator.of(context).pop(false);
+                          },
+                        ),
+                        TextButton(
+                          child: Text("Sí"),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => MyApp()),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
               },
               child: Row(
                 children: [
@@ -137,7 +218,7 @@ class _ListaProductosState extends State<ListaProductos> {
                   ),
                   const SizedBox(width: 8),
                   // Agrega un espacio entre el icono y el texto
-                  Text('Cerrar sesion'),
+                  Text('Cerrar sesión'),
                 ],
               ),
             ),
@@ -170,92 +251,256 @@ class _ListaProductosState extends State<ListaProductos> {
           ],
         ),
       ),
+      floatingActionButton: Wrap(
+        spacing: 3.0, // Espacio horizontal entre los botones
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(5.0,0.0,3.0, 0.0),
+            child: FloatingActionButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      title: Text("ATENCIÓN!"),
+                      content: Text(
+                          "Se han realizado cambios que no han sido guardados, si sale sin guardar se perderán. \n Desea salir sin guardar los cambios?"),
+                      actions: <Widget>[
+                        TextButton(
+                          child: Text("No"),
+                          onPressed: () {
+                            Navigator.of(context).pop(false);
+                          },
+                        ),
+                        TextButton(
+                          child: Text("Sí"),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              //GUARDAR INVENTARIO COMO CERRADO
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      paginaPrincipal(usuario)),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: Icon(Icons.close),
+              backgroundColor: Colors.red,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(5.0,0.0,3.0, 0.0),
+            child: FloatingActionButton(
+              onPressed: () {
+                // Acción del segundo botón flotante
+                Navigator.push(
+                  context,
+                  //GUARDAR INVENTARIO COMO CERRADO
+                  MaterialPageRoute(
+                      builder: (context) => paginaPrincipal(usuario)),
+                ); //TODO VALIDACIONES
+              },
+              child: Icon(Icons.save),
+              backgroundColor: Colors.greenAccent,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(5.0,0.0,3.0, 0.0),
+            child: FloatingActionButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      title: Text("ATENCIÓN!"),
+                      content: Text(
+                          "Si cierra el inventario no podrá modificarlo \n Desea guardar y cerrar el inventario?"),
+                      actions: <Widget>[
+                        TextButton(
+                          child: Text("No"),
+                          onPressed: () {
+                            Navigator.of(context).pop(false);
+                          },
+                        ),
+                        TextButton(
+                          child: Text("Sí"),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              //GUARDAR INVENTARIO COMO CERRADO
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      paginaPrincipal(usuario)),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: Icon(Icons.save_as_outlined),
+              backgroundColor: Colors.green,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(5.0,0.0,3.0, 0.0),
+            child: FloatingActionButton(
+              onPressed: () {
+                // Acción del segundo botón flotante
+              },
+              child: Icon(Icons.add_box_outlined),
+              backgroundColor: Colors.orange,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(5.0,0.0,3.0, 0.0),
+            child: FloatingActionButton(
+              onPressed: () {
+                // Acción del segundo botón flotante
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          CameraQR(usuario)),
+                );
+              },
+              child: Icon(Icons.camera_alt),
+              backgroundColor: Colors.grey,
+            ),
+          ),
+        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
-  void buildFiltros(BuildContext context) {
+  Future<void> _showFiltrosDialog() async {
+    final productosJson = await API.getFiltrosProductos(usuario);
+    final productos = filtrosProductos.fromJson(productosJson);
+    final categoriaSet = productos.json
+        .map((e) => e['idCategoriaEstadisticas_nombre']['descripcion'])
+        .toSet();
+    final categoriaList = categoriaSet.toList();
+    final subCategoriaMap =
+        productos.json.fold<Map<String, String>>({}, (map, e) {
+      final descripcionCategoria =
+          e['idCategoriaEstadisticas_nombre']['descripcion'];
+      final pathCompleto =
+          e['idCategoriaEstadisticas_pathCompleto']['descripcion'];
+      return {...map, descripcionCategoria: pathCompleto};
+    });
+    final tipoConservacionList = productos.json
+        .where((e) =>
+            e.containsKey('idImpresoraCocina_descripcion') &&
+            e['idImpresoraCocina_descripcion'] != null)
+        .map<String>((e) => e['idImpresoraCocina_descripcion']['descripcion'])
+        .toSet()
+        .toList();
     showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text('Lista de Inventarios'),
-            ),
-            body: ListView(
-              padding: const EdgeInsets.all(8),
-              children: <Widget>[
-                Container(
-                  height: 50,
-                  color: Colors.amber[600],
-                  child: const Center(child: Text('Categorias')),
-                ),
-                CheckboxListTileOption(title: 'Opción 1'),
-                CheckboxListTileOption(title: 'Opción 2'),
-                CheckboxListTileOption(title: 'Opción 3'),
-                Container(
-                  height: 50,
-                  color: Colors.amber[600],
-                  child: const Center(child: Text('Subcategorias')),
-                ),
-                CheckboxListTileOption(title: 'Opción 1'),
-                CheckboxListTileOption(title: 'Opción 2'),
-                CheckboxListTileOption(title: 'Opción 3'),
-                Container(
-                  height: 50,
-                  color: Colors.amber[600],
-                  child: const Center(child: Text('Tipos de conservacion')),
-                ),
-                CheckboxListTileOption(title: 'Opción 1'),
-                CheckboxListTileOption(title: 'Opción 2'),
-                CheckboxListTileOption(title: 'Opción 3'),
-                Container(
-                  height: 50,
-                  color: Colors.amber[600],
-                  child: const Center(child: Text('Criterios de ordenación')),
-                ),
-                //ACABAR DROPDOWNBUTTON
-              ],
-            ),
-            resizeToAvoidBottomInset: false,
-            bottomNavigationBar: Container(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: <Widget>[
-                      FloatingActionButton(
-                        onPressed: () {
-                          // Acción del primer botón
-                        },
-                        child: Icon(Icons.close),
-                        backgroundColor: Colors.red,
-                      ),
-                      SizedBox(width: 16.0),
-                      FloatingActionButton(
-                        onPressed: () {
-                          // Acción del segundo botón
-                        },
-                        child: Icon(Icons.check),
-                        backgroundColor: Colors.green,
-                      ),
-                    ],
+        context: context,
+        builder: (BuildContext context) {
+          final List<CheckboxListTileOption> opciones = categoriaList
+              .map((categoria) => CheckboxListTileOption(title: categoria))
+              .toList();
+          final List<CheckboxListTileOption> subCategoriasOpciones =
+              subCategoriaMap
+                  .entries
+                  .map((entry) => CheckboxListTileOption(
+                      title: entry.key + " / " + entry.value))
+                  .toList();
+          final List<CheckboxListTileOption> conservacionOpciones =
+              tipoConservacionList
+                  .map((conservacion) =>
+                      CheckboxListTileOption(title: conservacion))
+                  .toList();
+          return AlertDialog(
+            title: Text('Filtros'),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: [
+                  buildListTile('Categorias'),
+                  ...opciones,
+                  Divider(),
+                  buildListTile('Subcategorias'),
+                  ...subCategoriasOpciones,
+                  Divider(),
+                  buildListTile('Tipos de conservacion'),
+                  ...conservacionOpciones,
+                  Divider(),
+                  buildListTile('Criterios de ordenación'),
+                  MyOrderListTile(
+                    title: '1er Criterio',
+                    criterios: criteriosOrdenacion,
+                    ordenacion: opcionOrdenacion,
+                    onCriterioSelected: (int selectedCriterioIndex) {
+                      // código a ejecutar cuando se seleccione un criterio
+                    },
+                    onOrdenacionSelected: (int selectedOrdenacionIndex) {
+                      // código a ejecutar cuando se seleccione un criterio
+                    },
+                  ),
+                  MyOrderListTile(
+                    title: '2o Criterio',
+                    criterios: criteriosOrdenacion,
+                    ordenacion: opcionOrdenacion,
+                    onCriterioSelected: (int selectedCriterioIndex) {
+                      // código a ejecutar cuando se seleccione un criterio
+                    },
+                    onOrdenacionSelected: (int selectedOrdenacionIndex) {
+                      // código a ejecutar cuando se seleccione un criterio
+                    },
+                  ),
+                  MyOrderListTile(
+                    title: '3er Criterio',
+                    criterios: criteriosOrdenacion,
+                    ordenacion: opcionOrdenacion,
+                    onCriterioSelected: (int selectedCriterioIndex) {
+                      // código a ejecutar cuando se seleccione un criterio
+                    },
+                    onOrdenacionSelected: (int selectedOrdenacionIndex) {
+                      // código a ejecutar cuando se seleccione una ordenación
+                    },
                   ),
                 ],
               ),
             ),
-            floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-            floatingActionButton: null,
-          ),
-        );
-      },
-    );
+            actions: <Widget>[
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                icon: Icon(Icons.check),
+                color: Colors.green,
+                alignment: Alignment.bottomRight,
+                iconSize: 50.0,
+              ),
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                icon: Icon(Icons.close),
+                color: Colors.red,
+                alignment: Alignment.bottomLeft,
+                iconSize: 50.0,
+              ),
+            ],
+          );
+        });
   }
-
-
 }
+
 class CheckboxListTileOption extends StatefulWidget {
   final String title;
 
@@ -280,4 +525,90 @@ class _CheckboxListTileOptionState extends State<CheckboxListTileOption> {
       },
     );
   }
+}
+
+class MyOrderListTile extends StatefulWidget {
+  final String title;
+  final List<String> criterios;
+  final List<String> ordenacion;
+  final Function(int) onCriterioSelected;
+  final Function(int) onOrdenacionSelected;
+
+  const MyOrderListTile({
+    required this.title,
+    required this.criterios,
+    required this.ordenacion,
+    required this.onCriterioSelected,
+    required this.onOrdenacionSelected,
+  });
+
+  @override
+  _MyOrderListTileState createState() => _MyOrderListTileState();
+}
+
+class _MyOrderListTileState extends State<MyOrderListTile> {
+  int _selectedCriterioIndex = 0;
+  int _selectedOrdenacionIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Row(
+        children: [
+          Text(
+            widget.title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(width: 8),
+          DropdownButton<String>(
+            items: widget.criterios
+                .map((criterio) => DropdownMenuItem<String>(
+                      value: criterio,
+                      child: Text(criterio),
+                    ))
+                .toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedCriterioIndex = widget.criterios.indexOf(newValue!);
+              });
+              widget.onCriterioSelected(_selectedCriterioIndex);
+            },
+            value: widget.criterios[_selectedCriterioIndex],
+          ),
+          SizedBox(width: 8),
+          DropdownButton<String>(
+            items: widget.ordenacion
+                .map((ordenacion) => DropdownMenuItem<String>(
+                      value: ordenacion,
+                      child: Text(ordenacion),
+                    ))
+                .toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedOrdenacionIndex = widget.ordenacion.indexOf(newValue!);
+              });
+              widget.onOrdenacionSelected(_selectedOrdenacionIndex);
+            },
+            value: widget.ordenacion[_selectedOrdenacionIndex],
+          ),
+        ],
+      ),
+      tileColor: Colors.grey[200],
+    );
+  }
+}
+
+//Funcion para devolver el titulo de filtros
+ListTile buildListTile(String title) {
+  return ListTile(
+    title: Text(
+      title,
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    tileColor: Colors.grey[200],
+  );
 }
