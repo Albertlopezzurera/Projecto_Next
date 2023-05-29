@@ -93,7 +93,6 @@ class _PageHomeState extends State<PageHome> {
 
   Future<void> retrieveInventarios() async {
     var token = usuario.token;
-
     final response = await http.get(
       Uri.parse(
           "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/inventarios"),
@@ -295,12 +294,30 @@ class _PageHomeState extends State<PageHome> {
             ],
           ),
         ),
-        body : generarEstructuraInventarios()
+        body: FutureBuilder<Widget>(
+          future: generarEstructuraInventarios(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return CircularProgressIndicator(); // O cualquier otro indicador de carga
+            } else if (snapshot.hasError) {
+              return Text('Error al cargar los inventarios');
+            } else {
+              return snapshot.data ?? Container(); // Devuelve el widget obtenido del Future o un Container vacío si es nulo
+            }
+          },
+        )
+
     );
   }
 }
 
-Widget generarEstructuraInventarios(){
+Future<Widget> generarEstructuraInventarios() async {
+  List<TstocksInventarios>inventariosBDlocal = await DatabaseHelper.instance.filtrarInventarios();
+  print('OBJETOOOOOOOO');
+  print(inventariosBDlocal.elementAt(0).descripcionInventario);
+  print(inventariosBDlocal.elementAt(0).tipoInventarioDescripcion);
+  print(inventariosBDlocal.elementAt(0).almacenDescripcion);
+  print(inventariosBDlocal.elementAt(0).fechaRealizacionInventario);
   return Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
@@ -311,7 +328,7 @@ Widget generarEstructuraInventarios(){
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              'Inventario de Marzo 2023',
+              inventariosBDlocal.elementAt(0).descripcionInventario!,
               style: TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
@@ -330,8 +347,8 @@ Widget generarEstructuraInventarios(){
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text('Parcial-AlmacenPrinciapal'),
-                    Text('Fecha'),
+                    Text(inventariosBDlocal.elementAt(0).tipoInventarioDescripcion!+inventariosBDlocal.elementAt(0).almacenDescripcion!),
+                    Text(inventariosBDlocal.elementAt(0).fechaRealizacionInventario!),
                   ],
                 ),
               ],

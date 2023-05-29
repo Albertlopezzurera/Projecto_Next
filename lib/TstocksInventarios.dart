@@ -102,82 +102,101 @@ class TstocksInventarios {
   }
 
 
+
+
   int get idInventario => _idInventario;
 
   set idInventario(int value) {
     _idInventario = value;
   }
 
-  set identificador(int value) {
+  int? get identificador => _identificador;
+
+  set identificador(int? value) {
     _identificador = value;
   }
 
+  int? get idDominio => _idDominio;
 
-  set idDominio(int value) {
+  set idDominio(int? value) {
     _idDominio = value;
   }
 
+  String? get dominioDescripcion => _dominioDescripcion;
 
-  set dominioDescripcion(String value) {
+  set dominioDescripcion(String? value) {
     _dominioDescripcion = value;
   }
 
+  int? get idTienda => _idTienda;
 
-  set idTienda(int value) {
+  set idTienda(int? value) {
     _idTienda = value;
   }
 
-  set tiendaDescripcion(String value) {
+  String? get tiendaDescripcion => _tiendaDescripcion;
+
+  set tiendaDescripcion(String? value) {
     _tiendaDescripcion = value;
   }
 
+  int? get idAlmacen => _idAlmacen;
 
-  set idAlmacen(int value) {
+  set idAlmacen(int? value) {
     _idAlmacen = value;
   }
 
+  String? get almacenDescripcion => _almacenDescripcion;
 
-  set almacenDescripcion(String value) {
+  set almacenDescripcion(String? value) {
     _almacenDescripcion = value;
   }
 
+  int? get codigoInventario => _codigoInventario;
 
-  set codigoInventario(int value) {
+  set codigoInventario(int? value) {
     _codigoInventario = value;
   }
 
+  String? get descripcionInventario => _descripcionInventario;
 
-  set descripcionInventario(String value) {
+  set descripcionInventario(String? value) {
     _descripcionInventario = value;
   }
 
+  int? get idTipoInventario => _idTipoInventario;
 
-  set idTipoInventario(int value) {
+  set idTipoInventario(int? value) {
     _idTipoInventario = value;
   }
 
+  String? get tipoInventarioDescripcion => _tipoInventarioDescripcion;
 
-  set tipoInventarioDescripcion(String value) {
+  set tipoInventarioDescripcion(String? value) {
     _tipoInventarioDescripcion = value;
   }
 
+  String? get fechaRealizacionInventario => _fechaRealizacionInventario;
 
-  set fechaRealizacionInventario(String value) {
+  set fechaRealizacionInventario(String? value) {
     _fechaRealizacionInventario = value;
   }
 
+  int? get idEstadoInventario => _idEstadoInventario;
 
-  set idEstadoInventario(int value) {
+  set idEstadoInventario(int? value) {
     _idEstadoInventario = value;
   }
 
+  String? get estadoInventario => _estadoInventario;
 
-  set estadoInventario(String value) {
+  set estadoInventario(String? value) {
     _estadoInventario = value;
   }
 
+  List<TstocksDetallesInventario>? get detallesInventario => _detallesInventario;
 
-  set detallesInventario(List<TstocksDetallesInventario> value) {
+  set detallesInventario(List<TstocksDetallesInventario>? value) {
     _detallesInventario = value;
   }
 
@@ -186,15 +205,3 @@ class TstocksInventarios {
     return 'TstocksInventarios{_idInventario: $_idInventario, _identificador: $_identificador, _idDominio: $_idDominio, _dominioDescripcion: $_dominioDescripcion, _idTienda: $_idTienda, _tiendaDescripcion: $_tiendaDescripcion, _idAlmacen: $_idAlmacen, _almacenDescripcion: $_almacenDescripcion, _codigoInventario: $_codigoInventario, _descripcionInventario: $_descripcionInventario, _idTipoInventario: $_idTipoInventario, _tipoInventarioDescripcion: $_tipoInventarioDescripcion, _fechaRealizacionInventario: $_fechaRealizacionInventario, _idEstadoInventario: $_idEstadoInventario, _estadoInventario: $_estadoInventario, _detallesInventario: $_detallesInventario}';
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-

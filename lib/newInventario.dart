@@ -364,3 +364,4 @@ class _NuevoInventarioState extends State<newInvPass> {
     );
   }
 }
+

@@ -96,7 +96,7 @@ class DatabaseHelper {
         idTienda: inventariosMap[i]["idTienda"],
         tiendaDescripcion: inventariosMap[i]["tiendaDescripcion"],
         idAlmacen: inventariosMap[i]["idAlmacen"],
-        almacenDescripcion: inventariosMap[i][" almacenDescripcion"],
+        almacenDescripcion: inventariosMap[i]["almacenDescripcion"],
         codigoInventario: inventariosMap[i]["codigoInventario"],
         descripcionInventario: inventariosMap[i]["descripcionInventario"],
         idTipoInventario: inventariosMap[i]["idTipoInventario"],

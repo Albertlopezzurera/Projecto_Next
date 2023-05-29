@@ -230,6 +230,7 @@ class _ListaProductosState extends State<ListaProductos> {
         ),
       ),
       body: Container(
+        //TODO PAGINA PRINCIPAL PARA HACER PRODUCTOS
         alignment: Alignment.topRight,
         child: Stack(
           children: [
@@ -237,7 +238,7 @@ class _ListaProductosState extends State<ListaProductos> {
               children: [
                 Expanded(
                   child: Center(
-                    child: Text("Contenido de la lista de productos"),
+                    child: Text("Ningun articulo en el inventario"),
                   ),
                 ),
               ],

@@ -295,14 +295,6 @@ class _CameraQRState extends State<CameraQR> {
                           TextButton(
                             child: Text("Sí"),
                             onPressed: () {
-                              //Navigator.pushAndRemoveUntil(
-                              //context,
-                              //MaterialPageRoute(
-                              //builder: (context) => CameraQR(widget.usuario, widget.inventarioexistente),
-                              //),
-                              //(route) => false,
-                              //);
-                              //TODO añadir producto en inventario
                               if (listaEmpaquetados.length == 2) {
                                 String descripcionProducto = listaInfProd[0];
                                 int idProducto = listaInfProd[2] as int;
@@ -312,20 +304,61 @@ class _CameraQRState extends State<CameraQR> {
                                     listaEmpaquetados.elementAt(1) as int;
                                 String descripcionEmpaquetado =
                                     listaEmpaquetados.elementAt(2);
+                                TstocksDetallesInventario liniaProd1 =
+                                    new TstocksDetallesInventario(
+                                        linea: 0,
+                                        idDetalle: 0,
+                                        idInventario: idInventario,
+                                        idUnidadMedida: 0,
+                                        descripcionUnidadMedida: "",
+                                        idProducto: idProducto,
+                                        descripcionProducto:
+                                            descripcionProducto,
+                                        idAlmacen: widget
+                                            .inventarioexistente.idAlmacen!,
+                                        almacenDescripcion: widget.inventarioexistente.almacenDescripcion!,
+                                        idEmpaquetadoProducto:
+                                            idEmpaquetadoProd,
+                                        empaquetadoDescripcion:
+                                            descripcionEmpaquetado,
+                                        idTipoDetalle: 0,
+                                        descripcionTipoDetalle: "",
+                                        cantidad: 0);
+                                widget.inventarioexistente.detallesInventario!.add(liniaProd1);
                               }
                               if (listaEmpaquetados.length == 4) {
                                 String descripcionProducto = listaInfProd[0];
                                 int idProducto = listaInfProd[2] as int;
                                 int idInventario =
                                     widget.inventarioexistente.idInventario;
-                                int idEmpaquetadoProd =
-                                    listaEmpaquetados.elementAt(1) as int;
-                                String descripcionEmpaquetado =
-                                    listaEmpaquetados.elementAt(2);
                                 int idEmpaquetadoProd2 =
                                     listaEmpaquetados.elementAt(3) as int;
                                 String descripcionEmpaquetado2 =
                                     listaEmpaquetados.elementAt(4);
+                                TstocksDetallesInventario liniaProd2 =
+                                    new TstocksDetallesInventario(
+                                        linea: 0,
+                                        idDetalle: 0,
+                                        idInventario: idInventario,
+                                        idUnidadMedida: 0,
+                                        descripcionUnidadMedida: "",
+                                        idProducto: idProducto,
+                                        descripcionProducto:
+                                            descripcionProducto,
+                                        idAlmacen: widget
+                                            .inventarioexistente.idAlmacen!,
+                                        almacenDescripcion: widget
+                                            .inventarioexistente
+                                            .almacenDescripcion!,
+                                        idEmpaquetadoProducto:
+                                            idEmpaquetadoProd2,
+                                        empaquetadoDescripcion:
+                                            descripcionEmpaquetado2,
+                                        idTipoDetalle: 0,
+                                        descripcionTipoDetalle: "",
+                                        cantidad: 0);
+                                widget.inventarioexistente.detallesInventario!
+                                    .add(liniaProd2);
                               }
                               if (listaEmpaquetados.length == 6) {
                                 String descripcionProducto = listaInfProd[0];
@@ -336,6 +369,41 @@ class _CameraQRState extends State<CameraQR> {
                                     listaEmpaquetados.elementAt(5) as int;
                                 String descripcionEmpaquetado3 =
                                     listaEmpaquetados.elementAt(6);
+                                TstocksDetallesInventario liniaProd3 =
+                                    new TstocksDetallesInventario(
+                                        linea: 0,
+                                        idDetalle: 0,
+                                        idInventario: idInventario,
+                                        idUnidadMedida: 0,
+                                        descripcionUnidadMedida: "",
+                                        idProducto: idProducto,
+                                        descripcionProducto:
+                                            descripcionProducto,
+                                        idAlmacen: widget
+                                            .inventarioexistente.idAlmacen!,
+                                        almacenDescripcion: widget
+                                            .inventarioexistente
+                                            .almacenDescripcion!,
+                                        idEmpaquetadoProducto:
+                                            idEmpaquetadoProd3,
+                                        empaquetadoDescripcion:
+                                            descripcionEmpaquetado3,
+                                        idTipoDetalle: 0,
+                                        descripcionTipoDetalle: "",
+                                        cantidad: 0);
+                                widget.inventarioexistente.detallesInventario!
+                                    .add(liniaProd3);
+                                print(widget
+                                    .inventarioexistente.detallesInventario);
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CameraQR(
+                                        widget.usuario,
+                                        widget.inventarioexistente),
+                                  ),
+                                  (route) => false,
+                                );
                               }
                             },
                           ),
