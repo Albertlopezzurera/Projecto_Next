@@ -12,12 +12,13 @@ class filtrosInventario {
       String _tInventario = mapa['idTipoInventario_descripcion']['descripcion'];
       String _eInventario =
           mapa['idEstadoInventario_descripcion']['descripcion'];
-      Inventario inv = Inventario(
-          idInventario: _idInventario,
-          nombreTienda: _nTienda,
-          tipoInventario: _tInventario,
-          estadoInventario: _eInventario);
-      listaInventarios.add(inv);
+        Inventario inv = Inventario(
+            idInventario: _idInventario,
+            nombreTienda: _nTienda,
+            tipoInventario: _tInventario,
+            estadoInventario: _eInventario);
+        listaInventarios.add(inv);
+
     });
     return filtrosInventario(inventario: listaInventarios);
   }

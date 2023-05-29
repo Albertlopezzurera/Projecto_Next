@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:projectobueno/TstocksInventarios.dart';
+import 'package:projectobueno/User.dart';
 import 'package:projectobueno/cameraQR.dart';
 import 'package:projectobueno/filtrosProductos.dart';
 import 'package:projectobueno/myapp.dart';
@@ -22,8 +22,10 @@ const List<String> criteriosOrdenacion = [
 ];
 
 class ListaProductos extends StatefulWidget {
-  final String title;
-  ListaProductos({required this.title});
+  final User usuario; // Agregar esta línea
+  final TstocksInventarios inventarioexistente;
+  ListaProductos(this.usuario, this.inventarioexistente);
+  final String title = 'LISTA INVENTARIOS';
   @override
   _ListaProductosState createState() => _ListaProductosState();
 }
@@ -125,7 +127,9 @@ class _ListaProductosState extends State<ListaProductos> {
               children: [
                 Text(usuario.nombre),
                 Text(usuario.dominio),
-                SizedBox(height: 60,)
+                SizedBox(
+                  height: 60,
+                )
               ],
             ),
             // Resto del código...
@@ -255,7 +259,7 @@ class _ListaProductosState extends State<ListaProductos> {
         spacing: 3.0, // Espacio horizontal entre los botones
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(5.0,0.0,3.0, 0.0),
+            padding: const EdgeInsets.fromLTRB(5.0, 0.0, 3.0, 0.0),
             child: FloatingActionButton(
               onPressed: () {
                 showDialog(
@@ -297,7 +301,7 @@ class _ListaProductosState extends State<ListaProductos> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(5.0,0.0,3.0, 0.0),
+            padding: const EdgeInsets.fromLTRB(5.0, 0.0, 3.0, 0.0),
             child: FloatingActionButton(
               onPressed: () {
                 // Acción del segundo botón flotante
@@ -313,7 +317,7 @@ class _ListaProductosState extends State<ListaProductos> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(5.0,0.0,3.0, 0.0),
+            padding: const EdgeInsets.fromLTRB(5.0, 0.0, 3.0, 0.0),
             child: FloatingActionButton(
               onPressed: () {
                 showDialog(
@@ -355,7 +359,7 @@ class _ListaProductosState extends State<ListaProductos> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(5.0,0.0,3.0, 0.0),
+            padding: const EdgeInsets.fromLTRB(5.0, 0.0, 3.0, 0.0),
             child: FloatingActionButton(
               onPressed: () {
                 // Acción del segundo botón flotante
@@ -365,15 +369,13 @@ class _ListaProductosState extends State<ListaProductos> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(5.0,0.0,3.0, 0.0),
+            padding: const EdgeInsets.fromLTRB(5.0, 0.0, 3.0, 0.0),
             child: FloatingActionButton(
               onPressed: () {
                 // Acción del segundo botón flotante
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          CameraQR(usuario)),
+                  MaterialPageRoute(builder: (context) => CameraQR(widget.usuario,widget.inventarioexistente)),
                 );
               },
               child: Icon(Icons.camera_alt),
@@ -426,6 +428,8 @@ class _ListaProductosState extends State<ListaProductos> {
                       CheckboxListTileOption(title: conservacion))
                   .toList();
           return AlertDialog(
+            insetPadding: EdgeInsets.all(5),
+            contentPadding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
             title: Text('Filtros'),
             content: SingleChildScrollView(
               child: ListBody(
@@ -440,39 +444,41 @@ class _ListaProductosState extends State<ListaProductos> {
                   ...conservacionOpciones,
                   Divider(),
                   buildListTile('Criterios de ordenación'),
-                  MyOrderListTile(
-                    title: '1er Criterio',
-                    criterios: criteriosOrdenacion,
-                    ordenacion: opcionOrdenacion,
-                    onCriterioSelected: (int selectedCriterioIndex) {
-                      // código a ejecutar cuando se seleccione un criterio
-                    },
-                    onOrdenacionSelected: (int selectedOrdenacionIndex) {
-                      // código a ejecutar cuando se seleccione un criterio
-                    },
-                  ),
-                  MyOrderListTile(
-                    title: '2o Criterio',
-                    criterios: criteriosOrdenacion,
-                    ordenacion: opcionOrdenacion,
-                    onCriterioSelected: (int selectedCriterioIndex) {
-                      // código a ejecutar cuando se seleccione un criterio
-                    },
-                    onOrdenacionSelected: (int selectedOrdenacionIndex) {
-                      // código a ejecutar cuando se seleccione un criterio
-                    },
-                  ),
-                  MyOrderListTile(
-                    title: '3er Criterio',
-                    criterios: criteriosOrdenacion,
-                    ordenacion: opcionOrdenacion,
-                    onCriterioSelected: (int selectedCriterioIndex) {
-                      // código a ejecutar cuando se seleccione un criterio
-                    },
-                    onOrdenacionSelected: (int selectedOrdenacionIndex) {
-                      // código a ejecutar cuando se seleccione una ordenación
-                    },
-                  ),
+                  Wrap(spacing: 16.0, children: [
+                    MyOrderListTile(
+                      title: '1er',
+                      criterios: criteriosOrdenacion,
+                      ordenacion: opcionOrdenacion,
+                      onCriterioSelected: (int selectedCriterioIndex) {
+                        // código a ejecutar cuando se seleccione un criterio
+                      },
+                      onOrdenacionSelected: (int selectedOrdenacionIndex) {
+                        // código a ejecutar cuando se seleccione un criterio
+                      },
+                    ),
+                    MyOrderListTile(
+                      title: '2o',
+                      criterios: criteriosOrdenacion,
+                      ordenacion: opcionOrdenacion,
+                      onCriterioSelected: (int selectedCriterioIndex) {
+                        // código a ejecutar cuando se seleccione un criterio
+                      },
+                      onOrdenacionSelected: (int selectedOrdenacionIndex) {
+                        // código a ejecutar cuando se seleccione un criterio
+                      },
+                    ),
+                    MyOrderListTile(
+                      title: '3er',
+                      criterios: criteriosOrdenacion,
+                      ordenacion: opcionOrdenacion,
+                      onCriterioSelected: (int selectedCriterioIndex) {
+                        // código a ejecutar cuando se seleccione un criterio
+                      },
+                      onOrdenacionSelected: (int selectedOrdenacionIndex) {
+                        // código a ejecutar cuando se seleccione una ordenación
+                      },
+                    ),
+                  ]),
                 ],
               ),
             ),
@@ -552,53 +558,71 @@ class _MyOrderListTileState extends State<MyOrderListTile> {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Row(
+    return Container(
+      color: Colors.grey[200],
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.title,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
+          Flexible(
+            flex: 1,
+            child: Text(
+              widget.title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           SizedBox(width: 8),
-          DropdownButton<String>(
-            items: widget.criterios
-                .map((criterio) => DropdownMenuItem<String>(
-                      value: criterio,
-                      child: Text(criterio),
-                    ))
-                .toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedCriterioIndex = widget.criterios.indexOf(newValue!);
-              });
-              widget.onCriterioSelected(_selectedCriterioIndex);
-            },
-            value: widget.criterios[_selectedCriterioIndex],
+          Expanded(
+            flex: 2,
+            child: DropdownButton<String>(
+              isExpanded: true,
+              items: widget.criterios
+                  .map((criterio) => DropdownMenuItem<String>(
+                value: criterio,
+                child: Text(criterio),
+              ))
+                  .toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedCriterioIndex = widget.criterios.indexOf(newValue!);
+                });
+                widget.onCriterioSelected(_selectedCriterioIndex);
+              },
+              value: widget.criterios[_selectedCriterioIndex],
+            ),
           ),
           SizedBox(width: 8),
-          DropdownButton<String>(
-            items: widget.ordenacion
-                .map((ordenacion) => DropdownMenuItem<String>(
-                      value: ordenacion,
-                      child: Text(ordenacion),
-                    ))
-                .toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedOrdenacionIndex = widget.ordenacion.indexOf(newValue!);
-              });
-              widget.onOrdenacionSelected(_selectedOrdenacionIndex);
-            },
-            value: widget.ordenacion[_selectedOrdenacionIndex],
+          Flexible(
+            flex: 2,
+            child: DropdownButton<String>(
+              isExpanded: true,
+              items: widget.ordenacion
+                  .map((ordenacion) => DropdownMenuItem<String>(
+                value: ordenacion,
+                child: Text(ordenacion),
+              ))
+                  .toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedOrdenacionIndex = widget.ordenacion.indexOf(newValue!);
+                });
+                widget.onOrdenacionSelected(_selectedOrdenacionIndex);
+              },
+              value: widget.ordenacion[_selectedOrdenacionIndex],
+            ),
           ),
         ],
       ),
-      tileColor: Colors.grey[200],
     );
   }
+
+
+
+
 }
+
+
 
 //Funcion para devolver el titulo de filtros
 ListTile buildListTile(String title) {

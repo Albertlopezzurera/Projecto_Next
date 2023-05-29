@@ -2,10 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:projectobueno/TstocksDetallesInventario.dart';
+import 'package:projectobueno/TstocksInventarios.dart';
 import 'package:projectobueno/User.dart';
 import 'package:projectobueno/listaProductos.dart';
 import 'package:projectobueno/myapp.dart';
 import 'package:projectobueno/paginaPrincipal.dart';
+
+import 'DatabaseHelper.dart';
 
 const List<String> list = <String>['One', 'Two', 'Three', 'Four'];
 
@@ -40,6 +44,13 @@ class _NuevoInventarioState extends State<newInvPass> {
   String dropdowntypetienda = "";
   TextEditingController _descripcionInvController = new TextEditingController();
   String descripcionInventario = "";
+
+  List<String> _listadeAlmacenes = [];
+  List<int> _listadeAlmacenesID = [];
+  List<String> _listadeTiendas = [];
+  List<int> _listadeTiendasID = [];
+  List<String> _listaInvType = [];
+  List<int> _listaInvTypeID = [];
 
   DateTime? _selectedDate;
 
@@ -79,10 +90,15 @@ class _NuevoInventarioState extends State<newInvPass> {
       }
     }
   }
+  int encontrarIndice(String valorBuscado, List<String> lista) {
+    for (int i = 0; i < lista.length; i++) {
+      if (lista[i] == valorBuscado) {
+        return i;
+      }
+    }
+    return -1; // Retorna -1 si no se encuentra el valor en la lista
+  }
 
-  List<String> _listadeAlmacenes = [];
-  List<String> _listadeTiendas = [];
-  List<String> _listaInvType = [];
 
   @override
   void initState() {
@@ -102,9 +118,11 @@ class _NuevoInventarioState extends State<newInvPass> {
 
     var data = jsonDecode(response.body);
     _listadeTiendas.clear();
+    _listadeTiendasID.clear();
     for (data in data) {
       if (!_listadeTiendas.contains(data["descripcion"])) {
         _listadeTiendas.add(data["descripcion"]);
+        _listadeTiendasID.add(data["id"]);
       }
     }
     if (_listadeTiendas.isNotEmpty) {
@@ -124,9 +142,11 @@ class _NuevoInventarioState extends State<newInvPass> {
 
     var data = jsonDecode(response.body);
     _listadeAlmacenes.clear();
+    _listadeAlmacenesID.clear();
     for (data in data) {
       if (!_listadeAlmacenes.contains(data["descripcion"])) {
         _listadeAlmacenes.add(data["descripcion"]);
+        _listadeAlmacenesID.add(data["id"]);
       }
     }
     if (_listadeAlmacenes.isNotEmpty) {
@@ -147,9 +167,11 @@ class _NuevoInventarioState extends State<newInvPass> {
 
     var data = jsonDecode(response.body);
     _listaInvType.clear();
+    _listaInvTypeID.clear();
     for (data in data) {
       if (!_listaInvType.contains(data["descripcion"])) {
         _listaInvType.add(data["descripcion"]);
+        _listaInvTypeID.add(data["id"]);
       }
     }
     if (_listaInvType.isNotEmpty) {
@@ -195,7 +217,7 @@ class _NuevoInventarioState extends State<newInvPass> {
                 });
               },
               items:
-                  _listadeTiendas.map<DropdownMenuItem<String>>((String value) {
+              _listadeTiendas.map<DropdownMenuItem<String>>((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Text(value),
@@ -245,7 +267,7 @@ class _NuevoInventarioState extends State<newInvPass> {
                 });
               },
               items:
-                  _listaInvType.map<DropdownMenuItem<String>>((String value) {
+              _listaInvType.map<DropdownMenuItem<String>>((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Text(value),
@@ -279,6 +301,7 @@ class _NuevoInventarioState extends State<newInvPass> {
           Padding(
             padding: const EdgeInsets.only(left: 40.0),
             child: FloatingActionButton(
+              heroTag: "btncancel",
               onPressed: () {
                 // Acción del primer botón flotante
                 Navigator.push(
@@ -294,15 +317,42 @@ class _NuevoInventarioState extends State<newInvPass> {
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: FloatingActionButton(
-              onPressed: () {
+              heroTag: "btnok",
+              onPressed: () async {
                 // Acción del segundo botón flotante
                 String descripcionInventario = _descripcionInvController.text;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          ListaProductos(title: 'LISTA PRODUCTOS')),
-                );
+                if (descripcionInventario != null && !descripcionInventario.isEmpty) {
+                  if (_selectedDate != null) {
+
+                    int indicetienda = encontrarIndice(dropdowntypetienda, _listadeTiendas);
+                    int indicealmacen = encontrarIndice(dropdowntypealm, _listadeAlmacenes);
+                    int indicetypeinv = encontrarIndice(dropdowntypeinv, _listaInvType);
+                    int ultimoid = await DatabaseHelper.instance.obtenerUltimoId();
+
+                    TstocksInventarios inventarioexistente = new TstocksInventarios(idInventario : ultimoid,identificador: null, idDominio: usuario.iddominio,
+                        dominioDescripcion: usuario.dominio, descripcionInventario: descripcionInventario, idAlmacen: _listadeAlmacenesID[indicealmacen] as int,
+                        almacenDescripcion: _listadeAlmacenes[indicealmacen], idTienda: _listadeTiendasID[indicetienda] as int,
+                        tiendaDescripcion: _listadeTiendas[indicetienda], fechaRealizacionInventario: _selectedDate.toString(),
+                        idTipoInventario: _listaInvTypeID[indicetypeinv] as int, tipoInventarioDescripcion: _listaInvType[indicetypeinv], idEstadoInventario: 1
+                        , estadoInventario: "ABIERTO", detallesInventario: <TstocksDetallesInventario>[]
+                    );
+                    print(inventarioexistente);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ListaProductos(usuario, inventarioexistente),
+                      ),
+                    );
+                  }
+                  else {
+                    print("fecha nula");
+                  }
+
+                } else {
+                  print("descripcion nula");
+                }
+
               },
               child: Icon(Icons.check),
               backgroundColor: Colors.green,

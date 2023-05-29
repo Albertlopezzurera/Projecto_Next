@@ -9,6 +9,8 @@ class API {
       'https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/productos';
   static const String _urlInventarios =
       'https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/inventarios';
+  static const String _urlEmpaquetadosProducto = 'https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/empaquetadosProducto';
+  static const String _urlDetallesInventario = 'https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/detallesInventario';
 
   static Future<List> getFiltrosProductos(User usuario) async {
     var _token = usuario.token;
@@ -16,8 +18,6 @@ class API {
       Uri.parse(_urlProductos),
       headers: {'Authorization': 'Bearer $_token'},
     );
-    print(response.statusCode);
-    print(_token);
     if (response.statusCode == 200) {
       // Si el servidor devuelve una repuesta OK, parseamos el JSON
       final List<dynamic> data = json.decode(response.body);
@@ -34,8 +34,6 @@ class API {
       Uri.parse(_urlInventarios),
       headers: {'Authorization': 'Bearer $_token'},
     );
-    print(response.statusCode);
-    print(_token);
     if (response.statusCode == 200) {
       // Si el servidor devuelve una repuesta OK, parseamos el JSON
       final List<dynamic> data = json.decode(response.body);
@@ -45,4 +43,54 @@ class API {
       throw Exception('Failed to load post');
     }
   }
+
+  static Future<List> getProductoCamara(User usuario) async {
+    var _token = usuario.token;
+    final response = await http.get(
+      Uri.parse(_urlProductos),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    if (response.statusCode == 200) {
+      // Si el servidor devuelve una repuesta OK, parseamos el JSON
+      final List<dynamic> data = json.decode(response.body);
+      return data;
+    } else {
+      // Si esta respuesta no fue OK, lanza un error.
+      throw Exception('Failed to load post');
+    }
+  }
+
+  static Future<List> getEmpaquetadosProducto(User usuario) async {
+    var _token = usuario.token;
+    final response = await http.get(
+      Uri.parse(_urlEmpaquetadosProducto),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    if (response.statusCode == 200) {
+      // Si el servidor devuelve una repuesta OK, parseamos el JSON
+      final List<dynamic> data = json.decode(response.body);
+      return data;
+    } else {
+      // Si esta respuesta no fue OK, lanza un error.
+      throw Exception('Failed to load post');
+    }
+  }
+
+  static Future<List> retrieveInventarioDetalles(User usuario)async {
+    var _token = usuario.token;
+    final response = await http.get(
+      Uri.parse(_urlDetallesInventario),
+      headers: {'Authorization': 'Bearer $_token'},
+    );
+    if (response.statusCode == 200) {
+      // Si el servidor devuelve una repuesta OK, parseamos el JSON
+      final List<dynamic> data = json.decode(response.body);
+      return data;
+    } else {
+      // Si esta respuesta no fue OK, lanza un error.
+      throw Exception('Failed to load post');
+    }
+  }
+
+
 }

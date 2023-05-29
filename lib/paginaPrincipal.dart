@@ -1,12 +1,19 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:projectobueno/DatabaseHelper.dart';
+import 'package:projectobueno/TstocksInventarios.dart';
 import 'package:projectobueno/User.dart';
-import 'package:projectobueno/cameraQR.dart';
 import 'package:projectobueno/filtrosInventario.dart';
 import 'package:projectobueno/listaProductos.dart';
 import 'package:projectobueno/llamadaApi.dart';
 import 'package:projectobueno/myapp.dart';
 import 'package:projectobueno/newInventario.dart';
+
+
+import 'TstocksDetallesInventario.dart';
 
 const List<String> opcionOrdenacion = ['ASC', 'DESC'];
 const List<String> criteriosOrdenacion = [
@@ -39,162 +46,255 @@ class PageHome extends StatefulWidget {
 }
 
 class _PageHomeState extends State<PageHome> {
+
+  void retrieveInventarioDB(TstocksInventarios inventario) {
+    DatabaseHelper.instance.insert(inventario);
+  }
+  void retrieveInventarioDetallesDB(TstocksDetallesInventario producto) {
+    DatabaseHelper.instance.insertDetalles(producto);
+  }
+
+
+  Future<List<TstocksDetallesInventario>> retrieveInventarioDetalles(int idinventario) async {
+    var token = usuario.token;
+    final response = await http.get(
+      Uri.parse(
+          "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/detallesInventario"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+    List<TstocksDetallesInventario> listaproductos = [];
+    for (var data in jsonDecode(response.body)) {
+      if (idinventario == data["idInventario_descripcion"]["id"] as int) {
+        int ultimoid = await DatabaseHelper.instance.obtenerUltimoIdDetalles();
+        TstocksDetallesInventario producto = TstocksDetallesInventario(
+          linea: ultimoid,
+          idDetalle: 0,
+          idInventario: idinventario,
+          idUnidadMedida: data["idProducto_idUnidadDeMedidaGeneral_nombre"]?["id"],
+          descripcionUnidadMedida: data["idProducto_idUnidadDeMedidaGeneral_nombre"]?["descripcion"],
+          idProducto: data["idProducto_nombre"]?["id"],
+          descripcionProducto: data["idProducto_nombre"]?["descripcion"],
+          idAlmacen: data["i"
+              "dUbicacion_idAlmacen_descripcion"]?["id"],
+          almacenDescripcion: data["idUbicacion_idAlmacen_descripcion"]?["descripcion"],
+          idEmpaquetadoProducto: data["idEmpaquetadoProducto_descripcion"]?["id"],
+          empaquetadoDescripcion: data["idEmpaquetadoProducto_descripcion"]?["descripcion"],
+          idTipoDetalle: data["idTiposdetalle_descripcio"]?["id"] ?? 0,
+          descripcionTipoDetalle: data["idTiposdetalle_descripcio"]?["descripcion"] ?? "",
+          cantidad: data?["cantidadReal"] ?? 0,
+        );
+        listaproductos.add(producto);
+        retrieveInventarioDetallesDB(producto);
+      }
+    }
+    return listaproductos;
+
+  }
+
+  Future<void> retrieveInventarios() async {
+    var token = usuario.token;
+
+    final response = await http.get(
+      Uri.parse(
+          "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/inventarios"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+
+
+    for (var data in jsonDecode(response.body)) {
+      if (usuario.iddominio == data["idDominio_descripcion"]["id"] as int) {
+        var isitempty = await DatabaseHelper.instance.filtrarInventarioporId(data["id"]);
+        if (!isitempty) {
+          print(data["descripcion"]);
+          int ultimoid = await DatabaseHelper.instance.obtenerUltimoId();
+          TstocksInventarios
+          inventarioexistente = TstocksInventarios(
+            idInventario: ultimoid,
+            identificador: data["id"],
+            idDominio: data["idDominio_descripcion"]?["id"],
+            dominioDescripcion: data["idDominio_descripcion"]?["descripcion"],
+            descripcionInventario: data["descripcion"],
+            idAlmacen: data["idAlmacen_descripcion"]?["id"],
+            almacenDescripcion: data["idAlmacen_descripcion"]?["descripcion"],
+            idTienda: data["idTienda_descripcion"]?["id"],
+            tiendaDescripcion: data["idTienda_descripcion"]?["descripcion"],
+            fechaRealizacionInventario: data["fechaRealizacionInventario"],
+            idTipoInventario: data["idTipoInventario_descripcion"]?["id"],
+            tipoInventarioDescripcion: data["idTipoInventario_descripcion"]?["descripcion"],
+            idEstadoInventario: data["idEstadoInventario_descripcion"]?["id"],
+            estadoInventario: data["idEstadoInventario_descripcion"]?["descripcion"],
+            detallesInventario: await retrieveInventarioDetalles(data["id"]),
+          );
+          retrieveInventarioDB(inventarioexistente);
+          print(inventarioexistente.toString());
+        }
+
+      }
+
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    retrieveInventarios();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Lista de Inventarios'),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.add_box_outlined),
-            onPressed: () {
-              filtrarInventarios(context);
-            },
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => newInventario(usuario)),
-          );
-        },
-        child: Icon(Icons.add),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      drawer: Drawer(
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  alignment: Alignment.centerLeft,
-                  width: 70,
-                  height: 70,
-                ),
-                SizedBox(width: 8), // Espacio entre el logo y el texto
-                Expanded(
-                  child: Text(
-                    'NEXTT.DIRECTOR APP',
-                    textAlign: TextAlign.left,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Column(
-              children: [
-                Text(usuario.nombre),
-                Text(usuario.dominio),
-                SizedBox(
-                  height: 60,
-                )
-              ],
-            ),
-            // Resto del código...
-            InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => newInventario(usuario)),
-                );
+        appBar: AppBar(
+          title: Text('Lista de Inventarios'),
+          actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.add_box_outlined),
+              onPressed: () {
+                filtrarInventarios(context);
               },
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.add_box_outlined),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => newInventario(usuario)),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  Text('Nuevo inventario'),
-                ],
-              ),
-            ),
-            InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => paginaPrincipal(usuario)),
-                );
-              },
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.library_books),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => paginaPrincipal(usuario)),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  // Agrega un espacio entre el icono y el texto
-                  Text('Lista de inventarios'),
-                ],
-              ),
-            ),
-            InkWell(
-              splashColor: Colors.grey,
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: Text('ATENCIÓN!'),
-                      content: Text("Está seguro que quiere cerrar la sesión?"),
-                      actions: <Widget>[
-                        TextButton(
-                          child: Text("No"),
-                          onPressed: () {
-                            Navigator.of(context).pop(false);
-                          },
-                        ),
-                        TextButton(
-                          child: Text("Sí"),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => MyApp()),
-                            );
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.exit_to_app),
-                    onPressed: () {},
-                  ),
-                  const SizedBox(width: 8),
-                  // Agrega un espacio entre el icono y el texto
-                  Text('Cerrar sesión'),
-
-                ],
-              ),
             ),
           ],
         ),
-      ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => newInventario(usuario)),
+            );
+          },
+          child: Icon(Icons.add),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        drawer: Drawer(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Image.asset(
+                    'assets/images/logo.png',
+                    alignment: Alignment.centerLeft,
+                    width: 70,
+                    height: 70,
+                  ),
+                  SizedBox(width: 8), // Espacio entre el logo y el texto
+                  Expanded(
+                    child: Text(
+                      'NEXTT.DIRECTOR APP',
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                children: [
+                  Text(usuario.nombre),
+                  Text(usuario.dominio),
+                  SizedBox(
+                    height: 60,
+                  )
+                ],
+              ),
+              // Resto del código...
+              InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => newInventario(usuario)),
+                  );
+                },
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.add_box_outlined),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => newInventario(usuario)),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    Text('Nuevo inventario'),
+                  ],
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => paginaPrincipal(usuario)),
+                  );
+                },
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.library_books),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => paginaPrincipal(usuario)),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    // Agrega un espacio entre el icono y el texto
+                    Text('Lista de inventarios'),
+                  ],
+                ),
+              ),
+              InkWell(
+                splashColor: Colors.grey,
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('ATENCIÓN!'),
+                        content: Text("Está seguro que quiere cerrar la sesión?"),
+                        actions: <Widget>[
+                          TextButton(
+                            child: Text("No"),
+                            onPressed: () {
+                              Navigator.of(context).pop(false);
+                            },
+                          ),
+                          TextButton(
+                            child: Text("Sí"),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => MyApp()),
+                              );
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.exit_to_app),
+                      onPressed: () {},
+                    ),
+                    const SizedBox(width: 8),
+                    // Agrega un espacio entre el icono y el texto
+                    Text('Cerrar sesión'),
+
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
         body : generarEstructuraInventarios()
     );
   }
@@ -249,7 +349,7 @@ Future<void> filtrarInventarios(BuildContext context) async {
   final List<Inventario> listaInventarios =
       filtrosInventario.fromJson(inventarios).inventario;
   final List nombresTiendas =
-      listaInventarios.map((inventario) => inventario.getNombreTienda).toList();
+  listaInventarios.map((inventario) => inventario.getNombreTienda).toList();
   final List tipoInventario = listaInventarios
       .map((inventario) => inventario.getTipoInventario)
       .toList();
