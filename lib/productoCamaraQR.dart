@@ -11,6 +11,8 @@ class productoCamaraQR{
       String codigoProducto = mapa['codigo'];
       String categoriaPrincipal = mapa['idCategoriaEstadisticas_pathCompleto']['descripcion'];
       String categoriaSecundaria = mapa['idCategoriaEstadisticas_nombre']['descripcion'];
+      String idCatPrincipal = mapa['idCategoriaEstadisticas_pathCompleto']['id'].toString();
+      String idCatSecundaria = mapa['idCategoriaEstadisticas_nombre']['id'].toString();
       //String imagen = mapa['idGrupoImagenes_imagenes']['fichero'];
       if (mapa['ean13jan'] == result) {
         // Agregar elementos a la lista solo cuando se cumple la condición
@@ -19,6 +21,8 @@ class productoCamaraQR{
         productoEscaneado.add(codigoProducto.toString());
         productoEscaneado.add(categoriaPrincipal);
         productoEscaneado.add(categoriaSecundaria);
+        productoEscaneado.add(idCatPrincipal);
+        productoEscaneado.add(idCatSecundaria);
         List<dynamic> imagenes = mapa['idGrupoImagenes_imagenes'];
         if (imagenes.isNotEmpty) {
           String primerFicheroUid = imagenes[0]['ficheroUid'];
@@ -27,8 +31,6 @@ class productoCamaraQR{
           // Agregar un valor por defecto o un marcador para indicar que no hay imágenes
           productoEscaneado.add('No hay imágenes');
         }
-
-
       }
     }
     return productoCamaraQR(productoEscaneado: productoEscaneado);

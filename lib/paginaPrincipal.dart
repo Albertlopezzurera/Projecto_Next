@@ -14,7 +14,6 @@ import 'package:projectobueno/newInventario.dart';
 
 
 import 'TstocksDetallesInventario.dart';
-
 const List<String> opcionOrdenacion = ['ASC', 'DESC'];
 const List<String> criteriosOrdenacion = [
   'Fecha',
@@ -55,8 +54,10 @@ class _PageHomeState extends State<PageHome> {
   }
 
 
-  Future<List<TstocksDetallesInventario>> retrieveInventarioDetalles(int idinventario) async {
+  Future<List<TstocksDetallesInventario>> retrieveInventarioDetalles(int idinventario) async { //TODO HE HECHO CAMBIOS
+
     var token = usuario.token;
+
     final response = await http.get(
       Uri.parse(
           "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/detallesInventario"),
@@ -64,23 +65,45 @@ class _PageHomeState extends State<PageHome> {
     );
     List<TstocksDetallesInventario> listaproductos = [];
     for (var data in jsonDecode(response.body)) {
+
       if (idinventario == data["idInventario_descripcion"]["id"] as int) {
+
+        final productos = await API.getFiltrosProductos(usuario);
+        int idproducto = data["idProducto_nombre"]?["id"];
+        int idcategoriaprincipal = 0;
+        String categoriadescripcion = "";
+        int subcategoriaid = 0;
+        String subcategoriadescripcion = "";
+
+        for (int i = 0; i < productos.length; i++) {
+          dynamic elemento = productos[i];
+          if (idproducto == elemento["id"]) {
+            idcategoriaprincipal = elemento["idCategoriaEstadisticas_pathCompleto"]["id"];
+            categoriadescripcion = elemento["idCategoriaEstadisticas_pathCompleto"]["descripcion"];
+            subcategoriaid = elemento["idCategoriaEstadisticas_nombre"]["id"];
+            subcategoriadescripcion = elemento["idCategoriaEstadisticas_nombre"]["descripcion"];
+            break;
+
+          }
+        }
+
+
         int ultimoid = await DatabaseHelper.instance.obtenerUltimoIdDetalles();
         TstocksDetallesInventario producto = TstocksDetallesInventario(
           linea: ultimoid,
-          idDetalle: 0,
           idInventario: idinventario,
           idUnidadMedida: data["idProducto_idUnidadDeMedidaGeneral_nombre"]?["id"],
           descripcionUnidadMedida: data["idProducto_idUnidadDeMedidaGeneral_nombre"]?["descripcion"],
           idProducto: data["idProducto_nombre"]?["id"],
           descripcionProducto: data["idProducto_nombre"]?["descripcion"],
-          idAlmacen: data["i"
-              "dUbicacion_idAlmacen_descripcion"]?["id"],
+          idAlmacen: data["idUbicacion_idAlmacen_descripcion"]?["id"],
           almacenDescripcion: data["idUbicacion_idAlmacen_descripcion"]?["descripcion"],
           idEmpaquetadoProducto: data["idEmpaquetadoProducto_descripcion"]?["id"],
           empaquetadoDescripcion: data["idEmpaquetadoProducto_descripcion"]?["descripcion"],
-          idTipoDetalle: data["idTiposdetalle_descripcio"]?["id"] ?? 0,
-          descripcionTipoDetalle: data["idTiposdetalle_descripcio"]?["descripcion"] ?? "",
+          idcategoriaprincipal: idcategoriaprincipal,
+          categoriaprincipaldescripcion: categoriadescripcion,
+          subcategoriaid: subcategoriaid,
+          subcategoriadescripcion: subcategoriadescripcion,
           cantidad: data?["cantidadReal"] ?? 0,
         );
         listaproductos.add(producto);
@@ -93,6 +116,7 @@ class _PageHomeState extends State<PageHome> {
 
   Future<void> retrieveInventarios() async {
     var token = usuario.token;
+
     final response = await http.get(
       Uri.parse(
           "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/inventarios"),
@@ -294,30 +318,12 @@ class _PageHomeState extends State<PageHome> {
             ],
           ),
         ),
-        body: FutureBuilder<Widget>(
-          future: generarEstructuraInventarios(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator(); // O cualquier otro indicador de carga
-            } else if (snapshot.hasError) {
-              return Text('Error al cargar los inventarios');
-            } else {
-              return snapshot.data ?? Container(); // Devuelve el widget obtenido del Future o un Container vacío si es nulo
-            }
-          },
-        )
-
+        body : generarEstructuraInventarios()
     );
   }
 }
 
-Future<Widget> generarEstructuraInventarios() async {
-  List<TstocksInventarios>inventariosBDlocal = await DatabaseHelper.instance.filtrarInventarios();
-  print('OBJETOOOOOOOO');
-  print(inventariosBDlocal.elementAt(0).descripcionInventario);
-  print(inventariosBDlocal.elementAt(0).tipoInventarioDescripcion);
-  print(inventariosBDlocal.elementAt(0).almacenDescripcion);
-  print(inventariosBDlocal.elementAt(0).fechaRealizacionInventario);
+Widget generarEstructuraInventarios(){
   return Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
@@ -328,7 +334,7 @@ Future<Widget> generarEstructuraInventarios() async {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              inventariosBDlocal.elementAt(0).descripcionInventario!,
+              'Inventario de Marzo 2023',
               style: TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
@@ -347,8 +353,8 @@ Future<Widget> generarEstructuraInventarios() async {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(inventariosBDlocal.elementAt(0).tipoInventarioDescripcion!+inventariosBDlocal.elementAt(0).almacenDescripcion!),
-                    Text(inventariosBDlocal.elementAt(0).fechaRealizacionInventario!),
+                    Text('Parcial-AlmacenPrinciapal'),
+                    Text('Fecha'),
                   ],
                 ),
               ],

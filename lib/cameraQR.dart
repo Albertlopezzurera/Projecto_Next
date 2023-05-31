@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:projectobueno/DatabaseHelper.dart';
 import 'package:projectobueno/TstocksDetallesInventario.dart';
 import 'package:projectobueno/TstocksInventarios.dart';
 import 'package:projectobueno/User.dart';
@@ -33,8 +34,15 @@ class _CameraQRState extends State<CameraQR> {
   String descripEmp1 = 'botellas';
   String descripEmp2 = 'c_menor';
   String descripEmp3 = 'c_mayor';
+  bool infEmpaquet = false;
+  String codigoProductoEmpaquetado = "";
+  int totalBotellas = 1;
+  int totalCajasMenor = 1;
+  int totalCajasMayor = 1;
 
   void _initializeCamera() async {
+    print('CAMERA QR');
+    print(widget.inventarioexistente);
     WidgetsFlutterBinding.ensureInitialized();
 
     final cameras = await availableCameras();
@@ -44,7 +52,6 @@ class _CameraQRState extends State<CameraQR> {
     }
 
     final firstCamera = cameras.first;
-
     setState(() {
       _cameraController = CameraController(
         firstCamera,
@@ -73,24 +80,34 @@ class _CameraQRState extends State<CameraQR> {
 
   void _incrementNumber(int number, text) {
     setState(() {
-      if (identical(text, 'botellas')) {
+      if (text == 'botellas') {
         _numberBotellas++;
-      } else if (identical(text, 'c_menor')) {
+        totalBotellas = totalBotellas+1;
+        print(totalBotellas);
+      } else if (text == 'c_menor') {
         _numberCajasMenor++;
-      } else if (identical(text, 'c_mayor')) {
+        totalCajasMenor = totalCajasMenor + 1;
+      } else if (text == 'c_mayor') {
         _numberCajasMayor++;
+        totalCajasMayor = totalCajasMayor + 1;
       }
     });
   }
 
   void _decrementNumber(int number, text) {
     setState(() {
-      if (identical(text, 'botellas') && _numberBotellas > 0) {
+      if (identical(text, 'botellas') && totalBotellas > 0) {
         _numberBotellas--;
-      } else if (identical(text, 'c_menor') && _numberCajasMenor > 0) {
+        print('TOTALBOTELLAS');
+        print(totalBotellas);
+        totalBotellas = totalBotellas - 1;
+        print(totalBotellas);
+      } else if (identical(text, 'c_menor') && totalCajasMenor > 0) {
         _numberCajasMenor--;
-      } else if (identical(text, 'c_mayor') && _numberCajasMayor > 0) {
+        totalCajasMenor = totalCajasMenor - 1;
+      } else if (identical(text, 'c_mayor') && totalCajasMayor > 0) {
         _numberCajasMayor--;
+        totalCajasMayor = totalCajasMayor - 1;
       }
     });
   }
@@ -100,9 +117,13 @@ class _CameraQRState extends State<CameraQR> {
     _qrViewController.scannedDataStream.listen((scanData) {
       setState(() {
         _scanResult = scanData.code!;
-        listaInfProd = accederInformacionCodigo(_scanResult) as List<String>;
       });
+      procesarScanResult(_scanResult);
     });
+  }
+
+  void procesarScanResult(String scanResult) async {
+    await accederInformacionCodigo(_scanResult);
   }
 
   @override
@@ -164,9 +185,9 @@ class _CameraQRState extends State<CameraQR> {
                               Row(
                                 children: [
                                   listaInfProd.isNotEmpty &&
-                                          listaInfProd[5] != 'No hay imágenes'
+                                          listaInfProd[7] != 'No hay imágenes'
                                       ? Image.network(
-                                          'https://booh.pre-uploads.nexttdirector.net/${listaInfProd[5]}-thumbnail-big.png', // URL con la concatenación corregida
+                                          'https://booh.pre-uploads.nexttdirector.net/${listaInfProd[7]}-thumbnail-big.png', // URL con la concatenación corregida
                                           width: 50,
                                           height: 50,
                                         )
@@ -190,45 +211,32 @@ class _CameraQRState extends State<CameraQR> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  if (listaEmpaquetados.length == 2)
-                                    buildCounterRow(
-                                      number: _numberBotellas,
-                                      onDecrement: () {
-                                        _decrementNumber(
-                                            _numberBotellas, descripEmp1);
-                                      },
-                                      onIncrement: () {
-                                        _incrementNumber(
-                                            _numberBotellas, descripEmp1);
-                                      },
-                                      tipo: listaEmpaquetados,
+                                  if (infEmpaquet == true)
+                                    Column(
+                                      children: [
+                                        if (listaEmpaquetados.length == 3)
+                                          buildCounterRow(
+                                            number: _numberBotellas,
+                                            descripcion: descripEmp1,
+                                            tipo: listaEmpaquetados,
+                                          ),
+                                        if (listaEmpaquetados.length == 5)
+                                          buildCounterRow(
+                                            number: _numberCajasMenor,
+                                            descripcion: descripEmp2,
+                                            tipo: listaEmpaquetados,
+                                          ),
+                                        if (listaEmpaquetados.length == 7)
+                                          buildCounterRow(
+                                            number: _numberCajasMayor,
+                                            descripcion: descripEmp3,
+                                            tipo: listaEmpaquetados,
+                                          ),
+
+                                      ],
                                     ),
-                                  if (listaEmpaquetados.length == 4)
-                                    buildCounterRow(
-                                      number: _numberCajasMenor,
-                                      onDecrement: () {
-                                        _decrementNumber(
-                                            _numberCajasMenor, descripEmp2);
-                                      },
-                                      onIncrement: () {
-                                        _incrementNumber(
-                                            _numberCajasMenor, descripEmp2);
-                                      },
-                                      tipo: listaEmpaquetados,
-                                    ),
-                                  if (listaEmpaquetados.length == 6)
-                                    buildCounterRow(
-                                      number: _numberCajasMayor,
-                                      onDecrement: () {
-                                        _decrementNumber(
-                                            _numberCajasMayor, descripEmp3);
-                                      },
-                                      onIncrement: () {
-                                        _incrementNumber(
-                                            _numberCajasMayor, descripEmp3);
-                                      },
-                                      tipo: listaEmpaquetados,
-                                    ),
+                                  if (infEmpaquet == false)
+                                    Container(), // Contenedor vacío cuando infEmpaquet es false
                                 ],
                               ),
                             ],
@@ -293,120 +301,149 @@ class _CameraQRState extends State<CameraQR> {
                             },
                           ),
                           TextButton(
-                            child: Text("Sí"),
-                            onPressed: () {
-                              if (listaEmpaquetados.length == 2) {
-                                String descripcionProducto = listaInfProd[0];
-                                int idProducto = listaInfProd[2] as int;
-                                int idInventario =
-                                    widget.inventarioexistente.idInventario;
-                                int idEmpaquetadoProd =
-                                    listaEmpaquetados.elementAt(1) as int;
-                                String descripcionEmpaquetado =
-                                    listaEmpaquetados.elementAt(2);
-                                TstocksDetallesInventario liniaProd1 =
-                                    new TstocksDetallesInventario(
-                                        linea: 0,
-                                        idDetalle: 0,
-                                        idInventario: idInventario,
-                                        idUnidadMedida: 0,
-                                        descripcionUnidadMedida: "",
-                                        idProducto: idProducto,
-                                        descripcionProducto:
-                                            descripcionProducto,
-                                        idAlmacen: widget
-                                            .inventarioexistente.idAlmacen!,
-                                        almacenDescripcion: widget.inventarioexistente.almacenDescripcion!,
-                                        idEmpaquetadoProducto:
-                                            idEmpaquetadoProd,
-                                        empaquetadoDescripcion:
-                                            descripcionEmpaquetado,
-                                        idTipoDetalle: 0,
-                                        descripcionTipoDetalle: "",
-                                        cantidad: 0);
-                                widget.inventarioexistente.detallesInventario!.add(liniaProd1);
-                              }
-                              if (listaEmpaquetados.length == 4) {
-                                String descripcionProducto = listaInfProd[0];
-                                int idProducto = listaInfProd[2] as int;
-                                int idInventario =
-                                    widget.inventarioexistente.idInventario;
-                                int idEmpaquetadoProd2 =
-                                    listaEmpaquetados.elementAt(3) as int;
-                                String descripcionEmpaquetado2 =
-                                    listaEmpaquetados.elementAt(4);
-                                TstocksDetallesInventario liniaProd2 =
-                                    new TstocksDetallesInventario(
-                                        linea: 0,
-                                        idDetalle: 0,
-                                        idInventario: idInventario,
-                                        idUnidadMedida: 0,
-                                        descripcionUnidadMedida: "",
-                                        idProducto: idProducto,
-                                        descripcionProducto:
-                                            descripcionProducto,
-                                        idAlmacen: widget
-                                            .inventarioexistente.idAlmacen!,
-                                        almacenDescripcion: widget
-                                            .inventarioexistente
-                                            .almacenDescripcion!,
-                                        idEmpaquetadoProducto:
-                                            idEmpaquetadoProd2,
-                                        empaquetadoDescripcion:
-                                            descripcionEmpaquetado2,
-                                        idTipoDetalle: 0,
-                                        descripcionTipoDetalle: "",
-                                        cantidad: 0);
-                                widget.inventarioexistente.detallesInventario!
-                                    .add(liniaProd2);
-                              }
-                              if (listaEmpaquetados.length == 6) {
-                                String descripcionProducto = listaInfProd[0];
-                                int idProducto = listaInfProd[2] as int;
-                                int idInventario =
-                                    widget.inventarioexistente.idInventario;
-                                int idEmpaquetadoProd3 =
-                                    listaEmpaquetados.elementAt(5) as int;
-                                String descripcionEmpaquetado3 =
-                                    listaEmpaquetados.elementAt(6);
-                                TstocksDetallesInventario liniaProd3 =
-                                    new TstocksDetallesInventario(
-                                        linea: 0,
-                                        idDetalle: 0,
-                                        idInventario: idInventario,
-                                        idUnidadMedida: 0,
-                                        descripcionUnidadMedida: "",
-                                        idProducto: idProducto,
-                                        descripcionProducto:
-                                            descripcionProducto,
-                                        idAlmacen: widget
-                                            .inventarioexistente.idAlmacen!,
-                                        almacenDescripcion: widget
-                                            .inventarioexistente
-                                            .almacenDescripcion!,
-                                        idEmpaquetadoProducto:
-                                            idEmpaquetadoProd3,
-                                        empaquetadoDescripcion:
-                                            descripcionEmpaquetado3,
-                                        idTipoDetalle: 0,
-                                        descripcionTipoDetalle: "",
-                                        cantidad: 0);
-                                widget.inventarioexistente.detallesInventario!
-                                    .add(liniaProd3);
-                                print(widget
-                                    .inventarioexistente.detallesInventario);
+                              child: Text("Sí"),
+                              onPressed: () async {
+                                if (listaEmpaquetados.length == 3) {
+                                  String descripcionProducto = listaInfProd[0];
+                                  String categoriaPrincipal = listaInfProd[3];
+                                  String categoriaSecundaria = listaInfProd[4];
+                                  String idCatPrin = listaInfProd[5].toString();
+                                  String idCatSec = listaInfProd[6].toString();
+                                  int idProducto = int.parse(listaInfProd[2]);
+                                  int idInventario =
+                                      widget.inventarioexistente.idInventario;
+                                  int idEmpaquetadoProd =
+                                      int.parse(listaEmpaquetados.elementAt(1));
+                                  String descripcionEmpaquetado =
+                                      listaEmpaquetados.elementAt(2);
+                                  double numBot = totalBotellas.toDouble();
+                                  int ultimoid = await DatabaseHelper.instance
+                                      .obtenerUltimoIdDetalles();
+                                  TstocksDetallesInventario liniaProd1 =
+                                      TstocksDetallesInventario(
+                                    linea: ultimoid,
+                                    idInventario: idInventario,
+                                    idUnidadMedida: 0,
+                                    descripcionUnidadMedida: "",
+                                    idProducto: idProducto,
+                                    descripcionProducto: descripcionProducto,
+                                    idAlmacen:
+                                        widget.inventarioexistente.idAlmacen!,
+                                    almacenDescripcion: widget
+                                        .inventarioexistente
+                                        .almacenDescripcion!,
+                                    idEmpaquetadoProducto: idEmpaquetadoProd,
+                                    empaquetadoDescripcion:
+                                        descripcionEmpaquetado,
+                                    idcategoriaprincipal: int.parse(idCatPrin),
+                                    categoriaprincipaldescripcion:
+                                        categoriaPrincipal,
+                                    subcategoriaid: int.parse(idCatSec),
+                                    subcategoriadescripcion:
+                                        categoriaSecundaria,
+                                    cantidad: numBot,
+                                  );
+                                  widget.inventarioexistente.detallesInventario!
+                                      .add(liniaProd1);
+                                }
+                                if (listaEmpaquetados.length == 5) {
+                                  String descripcionProducto = listaInfProd[0];
+                                  String categoriaPrincipal = listaInfProd[3];
+                                  String categoriaSecundaria = listaInfProd[4];
+                                  String idCatPrin = listaInfProd[5].toString();
+                                  String idCatSec = listaInfProd[6].toString();
+                                  int idProducto = int.parse(listaInfProd[2]);
+                                  int idInventario =
+                                      widget.inventarioexistente.idInventario;
+                                  int idEmpaquetadoProd2 =
+                                      int.parse(listaEmpaquetados.elementAt(3));
+                                  String descripcionEmpaquetado2 =
+                                      listaEmpaquetados.elementAt(4);
+                                  double numCajMenor =
+                                      totalCajasMenor.toDouble();
+                                  int ultimoid = await DatabaseHelper.instance
+                                      .obtenerUltimoIdDetalles();
+                                  TstocksDetallesInventario liniaProd2 =
+                                      TstocksDetallesInventario(
+                                    linea: ultimoid,
+                                    idInventario: idInventario,
+                                    idUnidadMedida: 0,
+                                    descripcionUnidadMedida: "",
+                                    idProducto: idProducto,
+                                    descripcionProducto: descripcionProducto,
+                                    idAlmacen:
+                                        widget.inventarioexistente.idAlmacen!,
+                                    almacenDescripcion: widget
+                                        .inventarioexistente
+                                        .almacenDescripcion!,
+                                    idEmpaquetadoProducto: idEmpaquetadoProd2,
+                                    empaquetadoDescripcion:
+                                        descripcionEmpaquetado2,
+                                    idcategoriaprincipal: int.parse(idCatPrin),
+                                    categoriaprincipaldescripcion:
+                                        categoriaPrincipal,
+                                    subcategoriaid: int.parse(idCatSec),
+                                    subcategoriadescripcion:
+                                        categoriaSecundaria,
+                                    cantidad: numCajMenor,
+                                  );
+                                  widget.inventarioexistente.detallesInventario!
+                                      .add(liniaProd2);
+                                }
+                                if (listaEmpaquetados.length == 7) {
+                                  String descripcionProducto = listaInfProd[0];
+                                  String categoriaPrincipal = listaInfProd[3];
+                                  String categoriaSecundaria = listaInfProd[4];
+                                  String idCatPrin = listaInfProd[5].toString();
+                                  String idCatSec = listaInfProd[6].toString();
+                                  int idProducto = int.parse(listaInfProd[2]);
+                                  int ultimoid = await DatabaseHelper.instance
+                                      .obtenerUltimoIdDetalles();
+                                  int idInventario =
+                                      widget.inventarioexistente.idInventario;
+                                  int idEmpaquetadoProd3 =
+                                      int.parse(listaEmpaquetados.elementAt(5));
+                                  String descripcionEmpaquetado3 =
+                                      listaEmpaquetados.elementAt(6);
+                                  double numCajMayor =
+                                      totalCajasMayor.toDouble();
+                                  TstocksDetallesInventario liniaProd3 =
+                                      TstocksDetallesInventario(
+                                    linea: ultimoid,
+                                    idInventario: idInventario,
+                                    idUnidadMedida: 0,
+                                    descripcionUnidadMedida: "",
+                                    idProducto: idProducto,
+                                    descripcionProducto: descripcionProducto,
+                                    idAlmacen:
+                                        widget.inventarioexistente.idAlmacen!,
+                                    almacenDescripcion: widget
+                                        .inventarioexistente
+                                        .almacenDescripcion!,
+                                    idEmpaquetadoProducto: idEmpaquetadoProd3,
+                                    empaquetadoDescripcion:
+                                        descripcionEmpaquetado3,
+                                    idcategoriaprincipal: int.parse(idCatPrin),
+                                    categoriaprincipaldescripcion:
+                                        categoriaPrincipal,
+                                    subcategoriaid: int.parse(idCatSec),
+                                    subcategoriadescripcion:
+                                        categoriaSecundaria,
+                                    cantidad: numCajMayor,
+                                  );
+                                  widget.inventarioexistente.detallesInventario!
+                                      .add(liniaProd3);
+                                }
                                 Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => CameraQR(
-                                        widget.usuario,
-                                        widget.inventarioexistente),
-                                  ),
-                                  (route) => false,
+                                context,
+                                 MaterialPageRoute(
+                                 builder: (context) => CameraQR(
+                                  widget.usuario,
+                                 widget.inventarioexistente),
+                                 ),
+                                 (route) => false,
                                 );
-                              }
-                            },
-                          ),
+                              }),
                         ],
                       );
                     },
@@ -425,22 +462,19 @@ class _CameraQRState extends State<CameraQR> {
 
   Widget buildCounterRow({
     required int number,
-    required VoidCallback onDecrement,
-    required VoidCallback onIncrement,
+    required String descripcion,
     required Set<String> tipo,
+
   }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         IconButton(
-          onPressed: () {
-            onDecrement();
-          },
+          onPressed: () => _decrementNumber(number,descripcion),
           icon: Container(
             decoration: BoxDecoration(
-              color: Colors.red, // Establecer el color de fondo deseado
-              shape: BoxShape
-                  .circle, // Opcional: dar forma de círculo al contenedor
+              color: Colors.red,
+              shape: BoxShape.circle,
             ),
             child: Icon(Icons.horizontal_rule),
           ),
@@ -455,26 +489,23 @@ class _CameraQRState extends State<CameraQR> {
           child: Text('$number'),
         ),
         IconButton(
-          onPressed: () {
-            onIncrement();
-          },
+          onPressed: () => _incrementNumber(number,descripcion),
           icon: Container(
             decoration: BoxDecoration(
-              color: Colors.green, // Establecer el color de fondo deseado
-              shape: BoxShape
-                  .circle, // Opcional: dar forma de círculo al contenedor
+              color: Colors.green,
+              shape: BoxShape.circle,
             ),
             child: Icon(Icons.add_circle),
           ),
         ),
         Container(
-          child: Text(tipo.elementAt(1)),
+          child: Text(tipo.elementAt(2)),
         ),
-        if (tipo.length != 4)
+        if (tipo.length == 5)
           Container(
             child: Text(tipo.elementAt(4)),
           ),
-        if (tipo.length == 6)
+        if (tipo.length == 7)
           Container(
             child: Text(tipo.elementAt(6)),
           ),
@@ -482,11 +513,16 @@ class _CameraQRState extends State<CameraQR> {
     );
   }
 
+
+
   Future<void> accederInformacionCodigo(String scanResult) async {
     final listaInformacion = await API.getProductoCamara(widget.usuario);
     final producto = productoCamaraQR.fromJson(listaInformacion, scanResult);
     List<String> productoEscaneado = producto.productoEscaneado;
-    accederDescripEmpaquetado(productoEscaneado[2]);
+    if (productoEscaneado.length != 0) {
+      codigoProductoEmpaquetado = productoEscaneado[2];
+      await accederDescripEmpaquetado(codigoProductoEmpaquetado);
+    }
     setState(() {
       listaInfProd = productoEscaneado;
     });
@@ -501,7 +537,10 @@ class _CameraQRState extends State<CameraQR> {
     if (infEmpaquetadoProd.length == 0) {
       print('NO HAY EMPAQUETADO');
     } else {
-      listaEmpaquetados = Set<String>.from(infEmpaquetadoProd);
+      setState(() {
+        infEmpaquet = true;
+        listaEmpaquetados = Set<String>.from(infEmpaquetadoProd);
+      });
     }
   }
 }

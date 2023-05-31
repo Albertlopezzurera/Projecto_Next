@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:projectobueno/TstocksDetallesInventario.dart';
 import 'package:projectobueno/TstocksInventarios.dart';
 import 'package:projectobueno/User.dart';
 import 'package:projectobueno/cameraQR.dart';
@@ -36,6 +37,7 @@ class _ListaProductosState extends State<ListaProductos> {
   String itemSelecionadoCriterio = criteriosOrdenacion.first;
   String itemSelecionadoOpcionOrdenacion = opcionOrdenacion.first;
 
+
   void _startSearch() {
     setState(() {
       _isSearching = true;
@@ -50,6 +52,7 @@ class _ListaProductosState extends State<ListaProductos> {
   }
 
   AppBar buildAppBar(BuildContext context) {
+
     if (_isSearching) {
       return AppBar(
         leading: IconButton(
@@ -95,6 +98,8 @@ class _ListaProductosState extends State<ListaProductos> {
 
   @override
   Widget build(BuildContext context) {
+    print('LISTA PRODUCTOS');
+    print(widget.inventarioexistente);
     filtrosProductos;
     return Scaffold(
       appBar: buildAppBar(context),
@@ -238,20 +243,12 @@ class _ListaProductosState extends State<ListaProductos> {
               children: [
                 Expanded(
                   child: Center(
-                    child: Text("Ningun articulo en el inventario"),
+                    child: widget.inventarioexistente.detallesInventario == null || widget.inventarioexistente.detallesInventario!.isEmpty
+                        ? Container() // Contenedor vacío si detallesInventario es null o está vacío
+                        : TargetasProducto(widget.inventarioexistente),
                   ),
                 ),
               ],
-            ),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: IconButton(
-                icon: Icon(Icons.add),
-                onPressed: () {
-                  print("Agregar nuevo producto");
-                },
-              ),
             ),
           ],
         ),
@@ -386,6 +383,122 @@ class _ListaProductosState extends State<ListaProductos> {
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+
+  Widget generarEstructuraProductos(TstocksInventarios inventarioexistente) {
+    List<TstocksDetallesInventario>? listaProductos = inventarioexistente.detallesInventario;
+
+    return ListView.builder(
+      itemCount: listaProductos!.length,
+      itemBuilder: (context, index) {
+        var cantidad = listaProductos[index].cantidad.toString();
+        var producto = listaProductos[index].descripcionProducto;
+        var descripcionEmpaquet = listaProductos[index].empaquetadoDescripcion;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Card(
+              color: Colors.orange,
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                padding: EdgeInsets.all(8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Align(
+                            alignment: Alignment.center, // Alineación central
+                            child: Text(
+                              listaProductos[index].descripcionProducto,
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.add_a_photo),
+                                onPressed: () {
+                                  // Acción al presionar el IconButton
+                                },
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(cantidad + ' ' + listaProductos[index].empaquetadoDescripcion),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.add),
+                      onPressed: () {
+                        buildCounterRow(listaProductos,index);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget buildCounterRow(List<TstocksDetallesInventario> listaProductos, int index) {
+    var number = listaProductos[index].cantidad;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        IconButton(
+          onPressed: null,
+          icon: Container(
+            decoration: BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.horizontal_rule),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: Colors.black),
+          ),
+          padding: EdgeInsets.all(4),
+          child: Text('$number'),
+        ),
+        IconButton(
+          onPressed: null,
+          icon: Container(
+            decoration: BoxDecoration(
+              color: Colors.green,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.add_circle),
+          ),
+        ),
+        Container(
+          child: Text(listaProductos[index].empaquetadoDescripcion),
+        ),
+      ],
     );
   }
 
@@ -637,3 +750,215 @@ ListTile buildListTile(String title) {
     tileColor: Colors.grey[200],
   );
 }
+
+class TargetasProducto extends StatefulWidget {
+  final TstocksInventarios inventarioexistente;
+  TargetasProducto(this.inventarioexistente);
+
+  @override
+  _TargetaProducto createState() => _TargetaProducto();
+}
+
+class _TargetaProducto extends State<TargetasProducto> {
+  bool mostrarTarjetaPrincipal = true; // Estado para alternar entre las tarjetas
+  int selectedIndex = 0; // Índice seleccionado
+
+  @override
+  Widget build(BuildContext context) {
+    List<TstocksDetallesInventario>? listaProductos =
+        widget.inventarioexistente.detallesInventario;
+    return Scaffold(
+      body: Column(
+        children: [
+          Expanded(
+            child: mostrarTarjetaPrincipal
+                ? generarEstructuraProductos(widget.inventarioexistente)
+                : buildCounterRow(listaProductos, selectedIndex),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildCounterRow(
+      List<TstocksDetallesInventario>? listaProductos, int index) {
+    if (listaProductos == null || index >= listaProductos.length) {
+      return Container();
+    }
+    var number = listaProductos[index].cantidad;
+    return Container(
+      width: double.infinity, // Ancho máximo
+      child: Card(
+        color: Colors.cyan,
+        child: Container(
+          padding: EdgeInsets.all(8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Text(listaProductos[index].descripcionProducto),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          mostrarTarjetaPrincipal = true;
+                          selectedIndex = index;
+                        });
+                      },
+                      icon: Icon(Icons.minimize),
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                  '${listaProductos[index].idProducto} ${listaProductos[index].categoriaprincipalDescripcion} ${listaProductos[index].subcategoriaDescripcion}'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        // Acción al presionar el IconButton de restar
+                        if (number > 0) {
+                          number--;
+                        }
+                      });
+                    },
+                    icon: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.horizontal_rule),
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.black),
+                    ),
+                    padding: EdgeInsets.all(4),
+                    child: Text('$number'),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        // Acción al presionar el IconButton de sumar
+                        number++;
+                      });
+                    },
+                    icon: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.add_circle),
+                    ),
+                  ),
+                  Container(
+                    child: Text(listaProductos[index].empaquetadoDescripcion),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+
+  Widget generarEstructuraProductos(TstocksInventarios inventarioexistente) {
+    List<TstocksDetallesInventario>? listaProductos =
+        inventarioexistente.detallesInventario;
+
+    return ListView.builder(
+      itemCount: listaProductos!.length,
+      itemBuilder: (context, index) {
+        var cantidad = listaProductos[index].cantidad.toString();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Card(
+              color: Colors.orange,
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                padding: EdgeInsets.all(8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              listaProductos[index].descripcionProducto,
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.add_a_photo),
+                                onPressed: () {
+                                  // Acción al presionar el IconButton
+                                },
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                      cantidad +
+                                          ' ' +
+                                          listaProductos[index]
+                                              .empaquetadoDescripcion,
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                      )),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.add),
+                      onPressed: () {
+                        setState(() {
+                          mostrarTarjetaPrincipal = false;
+                          selectedIndex = index;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+

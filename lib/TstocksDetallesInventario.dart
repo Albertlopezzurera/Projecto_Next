@@ -1,6 +1,5 @@
 class TstocksDetallesInventario {
   int _linea;
-  int _idDetalle;
   int _idInventario;
   int _idUnidadMedida;
   String _descripcionUnidadMedida;
@@ -10,13 +9,14 @@ class TstocksDetallesInventario {
   String _almacenDescripcion;
   int _idEmpaquetadoProducto;
   String _empaquetadoDescripcion;
-  int _idTipoDetalle;
-  String _descripcionTipoDetalle;
+  int _idCategoriaprincipal;
+  String _categoriaprincipalDescripcion;
+  int _idSubcategoria;
+  String _subcategoriaDescripcion;
   double _cantidad;
 
   TstocksDetallesInventario({
     required int linea,
-    required int idDetalle,
     required int idInventario,
     required int idUnidadMedida,
     required String descripcionUnidadMedida,
@@ -26,11 +26,12 @@ class TstocksDetallesInventario {
     required String almacenDescripcion,
     required int idEmpaquetadoProducto,
     required String empaquetadoDescripcion,
-    required int idTipoDetalle,
-    required String descripcionTipoDetalle,
+    required int idcategoriaprincipal,
+    required String categoriaprincipaldescripcion,
+    required int subcategoriaid,
+    required String subcategoriadescripcion,
     required double cantidad,
   })  : _linea = linea,
-        _idDetalle = idDetalle,
         _idInventario = idInventario,
         _idUnidadMedida = idUnidadMedida,
         _descripcionUnidadMedida = descripcionUnidadMedida,
@@ -40,14 +41,15 @@ class TstocksDetallesInventario {
         _almacenDescripcion = almacenDescripcion,
         _idEmpaquetadoProducto = idEmpaquetadoProducto,
         _empaquetadoDescripcion = empaquetadoDescripcion,
-        _idTipoDetalle = idTipoDetalle,
-        _descripcionTipoDetalle = descripcionTipoDetalle,
+        _idCategoriaprincipal = idcategoriaprincipal,
+        _categoriaprincipalDescripcion = categoriaprincipaldescripcion,
+        _idSubcategoria = subcategoriaid,
+        _subcategoriaDescripcion = subcategoriadescripcion,
         _cantidad = cantidad;
 
   Map<String, dynamic> toJson() {
     return {
       'linea' : _linea,
-      'id': _idDetalle,
       'idInventario_descripcion': {
         "id": _idInventario,
       },
@@ -67,10 +69,6 @@ class TstocksDetallesInventario {
         "id": _idProducto,
         "descripcion": _descripcionProducto
       },
-      'idTiposdetalle_descripcion': {
-        "id": _idTipoDetalle,
-        "descripcion": _descripcionTipoDetalle
-      },
       'cantidadReal' : _cantidad,
 
     };
@@ -78,7 +76,6 @@ class TstocksDetallesInventario {
   Map<String, dynamic> toMap() {
     return {
       'linea' : _linea,
-      'idDetalle': _idDetalle,
       'idInventario': _idInventario,
       'idUnidadMedida': _idUnidadMedida,
       'descripcionUnidadMedida': _descripcionUnidadMedida,
@@ -88,8 +85,10 @@ class TstocksDetallesInventario {
       'almacenDescripcion': _almacenDescripcion,
       'idEmpaquetadoProducto': _idEmpaquetadoProducto,
       'empaquetadoDescripcion': _empaquetadoDescripcion,
-      'idTipoDetalle': _idTipoDetalle,
-      'descripcionTipoDetalle': _descripcionTipoDetalle,
+      'idcategoriaprincipal' : _idCategoriaprincipal,
+      'categoriaprincipalDescripcion' : _categoriaprincipalDescripcion,
+      'idSubcategoria' : _idSubcategoria,
+      'subcategoriaDescripcion' : _subcategoriaDescripcion,
       'cantidad': _cantidad,
     };
   }
@@ -102,16 +101,10 @@ class TstocksDetallesInventario {
     _cantidad = value;
   }
 
-  String get descripcionTipoDetalle => _descripcionTipoDetalle;
+  int get idCategoriaprincipal => _idCategoriaprincipal;
 
-  set descripcionTipoDetalle(String value) {
-    _descripcionTipoDetalle = value;
-  }
-
-  int get idTipoDetalle => _idTipoDetalle;
-
-  set idTipoDetalle(int value) {
-    _idTipoDetalle = value;
+  set idCategoriaprincipal(int value) {
+    _idCategoriaprincipal = value;
   }
 
   String get empaquetadoDescripcion => _empaquetadoDescripcion;
@@ -162,21 +155,33 @@ class TstocksDetallesInventario {
     _idUnidadMedida = value;
   }
 
+  String get categoriaprincipalDescripcion => _categoriaprincipalDescripcion;
+
+  set categoriaprincipalDescripcion(String value) {
+    _categoriaprincipalDescripcion = value;
+  }
+
+  int get idSubcategoria => _idSubcategoria;
+
+  set idSubcategoria(int value) {
+    _idSubcategoria = value;
+  }
+
+  String get subcategoriaDescripcion => _subcategoriaDescripcion;
+
+  set subcategoriaDescripcion(String value) {
+    _subcategoriaDescripcion = value;
+  }
+
   int get idInventario => _idInventario;
 
   set idInventario(int value) {
     _idInventario = value;
   }
 
-  int get idDetalle => _idDetalle;
-
-  set idDetalle(int value) {
-    _idDetalle = value;
-  }
-
   @override
   String toString() {
-    return 'TstocksDetallesInventario{_idDetalle: $_idDetalle, _idInventario: $_idInventario, _idUnidadMedida: $_idUnidadMedida, _descripcionUnidadMedida: $_descripcionUnidadMedida, _idProducto: $_idProducto, _descripcionProducto: $_descripcionProducto, _idAlmacen: $_idAlmacen, _almacenDescripcion: $_almacenDescripcion, _idEmpaquetadoProducto: $_idEmpaquetadoProducto, _empaquetadoDescripcion: $_empaquetadoDescripcion, _idTipoDetalle: $_idTipoDetalle, _descripcionTipoDetalle: $_descripcionTipoDetalle, _cantidad: $_cantidad}';
+    return 'TstocksDetallesInventario{_linea: $_linea, _idInventario: $_idInventario, _idUnidadMedida: $_idUnidadMedida, _descripcionUnidadMedida: $_descripcionUnidadMedida, _idProducto: $_idProducto, _descripcionProducto: $_descripcionProducto, _idAlmacen: $_idAlmacen, _almacenDescripcion: $_almacenDescripcion, _idEmpaquetadoProducto: $_idEmpaquetadoProducto, _empaquetadoDescripcion: $_empaquetadoDescripcion, _idCategoriaprincipal: $_idCategoriaprincipal, _categoriaprincipalDescripcion: $_categoriaprincipalDescripcion, _idSubcategoria: $_idSubcategoria, _subcategoriaDescripcion: $_subcategoriaDescripcion, _cantidad: $_cantidad}';
   }
 }
 

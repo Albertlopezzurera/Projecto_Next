@@ -336,6 +336,7 @@ class _NuevoInventarioState extends State<newInvPass> {
                         idTipoInventario: _listaInvTypeID[indicetypeinv] as int, tipoInventarioDescripcion: _listaInvType[indicetypeinv], idEstadoInventario: 1
                         , estadoInventario: "ABIERTO", detallesInventario: <TstocksDetallesInventario>[]
                     );
+                    print('NEW INVENTARIO');
                     print(inventarioexistente);
                     Navigator.push(
                       context,

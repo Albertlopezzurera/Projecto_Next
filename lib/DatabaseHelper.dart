@@ -2,7 +2,6 @@ import 'package:projectobueno/TstocksDetallesInventario.dart';
 import 'package:projectobueno/TstocksInventarios.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-
 class DatabaseHelper {
 
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -50,7 +49,6 @@ class DatabaseHelper {
     db.execute('''
     CREATE TABLE IF NOT EXISTS TStocksDetallesInventario (
       linea INTEGER PRIMARY KEY,
-      idDetalle INTEGER,
       idInventario INTEGER,
       idUnidadMedida INTEGER,
       descripcionUnidadMedida TEXT,
@@ -60,8 +58,10 @@ class DatabaseHelper {
       almacenDescripcion TEXT,
       idEmpaquetadoProducto INTEGER,
       empaquetadoDescripcion TEXT,
-      idTipoDetalle INTEGER,
-      descripcionTipoDetalle TEXT,
+      idcategoriaprincipal INTEGER,
+      categoriaprincipalDescripcion TEXT,
+      idSubcategoria INTEGER,
+      subcategoriaDescripcion INTEGER,
       cantidad INTEGER,
       FOREIGN KEY (idInventario) REFERENCES TStocksInventario(idInventario)
     );
@@ -131,7 +131,6 @@ class DatabaseHelper {
     final List<Map<String, dynamic>> detallesMap = await db.query("TstocksDetallesInventario");
     return List.generate(detallesMap.length, (i) => TstocksDetallesInventario(
       linea: detallesMap[i]["linea"],
-      idDetalle: detallesMap[i]["idDetalle"],
       idInventario: detallesMap[i]["idInventario"],
       idUnidadMedida: detallesMap[i]["idUnidadMedida"],
       descripcionUnidadMedida: detallesMap[i]["descripcionUnidadMedida"],
@@ -141,9 +140,11 @@ class DatabaseHelper {
       almacenDescripcion: detallesMap[i]["almacenDescripcion"],
       idEmpaquetadoProducto: detallesMap[i]["idEmpaquetadoProducto"],
       empaquetadoDescripcion: detallesMap[i]["empaquetadoDescripcion"],
-      idTipoDetalle: detallesMap[i]["idTipoDetalle"],
-      descripcionTipoDetalle: detallesMap[i]["descripcionTipoDetalle"],
       cantidad: detallesMap[i]["cantidad"],
+      idcategoriaprincipal: detallesMap[i]["idCategoriaprincipal"],
+      categoriaprincipaldescripcion: detallesMap[i]["categoriaprincipalDescripcion"],
+      subcategoriaid: detallesMap[i]["idSubcategoria"],
+      subcategoriadescripcion: detallesMap[i]["subcategoriaDescripcion"],
     ));
   }
 
@@ -181,8 +182,4 @@ class DatabaseHelper {
 
 
 }
-
-
-
-
 
