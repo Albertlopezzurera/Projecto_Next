@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:projectobueno/DatabaseHelper.dart';
 import 'package:projectobueno/TstocksDetallesInventario.dart';
 import 'package:projectobueno/TstocksInventarios.dart';
@@ -14,10 +13,7 @@ import 'package:projectobueno/newInventario.dart';
 import 'package:projectobueno/paginaPrincipal.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
 import 'llamadaApi.dart';
-
-List<String> listaColores = ['green', 'cyan', 'brown'];
 
 class ListaProductos extends StatefulWidget {
   final User usuario; // Agregar esta línea
@@ -77,7 +73,10 @@ class _ListaProductosState extends State<ListaProductos> {
       );
     } else {
       return AppBar(
-        title: Text(widget.title),
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(widget.title),
+        ),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.search),
@@ -97,6 +96,7 @@ class _ListaProductosState extends State<ListaProductos> {
     print('LISTA PRODUCTOS');
     print(widget.inventarioexistente.detallesInventario);
     filtrosProductos;
+
     return Scaffold(
       appBar: buildAppBar(context),
       drawer: Drawer(
@@ -240,9 +240,7 @@ class _ListaProductosState extends State<ListaProductos> {
                 Expanded(
                   child: Center(
                     child: widget.inventarioexistente.detallesInventario ==
-                                null ||
-                            widget
-                                .inventarioexistente.detallesInventario!.isEmpty
+                                null
                         ? Container() // Contenedor vacío si detallesInventario es null o está vacío
                         : TargetasProducto(widget.inventarioexistente),
                   ),
@@ -314,37 +312,40 @@ class _ListaProductosState extends State<ListaProductos> {
                               Navigator.of(context).pop();
                             },
                             child: Text('Aceptar'),
-
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                } else {
+                  print('HOLA');
+                  for (int i = 0; i < widget.inventarioexistente.detallesInventario!.length; i++) {
+                    DatabaseHelper.instance.updateDetalles(widget.inventarioexistente.detallesInventario!.elementAt(i));
+                  }
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Confirmacion'),
+                        content: Text('Inventario guardado correctamente'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => paginaPrincipal(usuario),
+                                ),
+                              );
+                            },
+                            child: Text('Aceptar'),
                           ),
                         ],
                       );
                     },
                   );
                 }
-                  for (int i = 0; i < widget.inventarioexistente.detallesInventario!.length; i++) {
-                    DatabaseHelper.instance.updateDetalles(widget.inventarioexistente.detallesInventario!.elementAt(i));
-                  }
-                AlertDialog(
-                  title: Text('Confirmacion'),
-                  content: Text('Inventario guardado correctamente'),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text('Aceptar'),
-                    ),
-                  ],
-                );
-                Future.delayed(Duration(seconds: 3), () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => paginaPrincipal(usuario),
-                      ),
-                    );
-                  }); //TODO VALIDACIONES
-                },
+              },
               child: Icon(Icons.save),
               backgroundColor: Colors.greenAccent,
             ),
@@ -377,6 +378,8 @@ class _ListaProductosState extends State<ListaProductos> {
                               DatabaseHelper.instance.updateDetalles(widget.inventarioexistente.detallesInventario!.elementAt(i));
                             }
                             cerrarInventario(widget.inventarioexistente);
+                            widget.inventarioexistente.idEstadoInventario=2;
+                            widget.inventarioexistente.estadoInventario='CONFIRMADO';
                             Navigator.push(
                               context,
                               //GUARDAR INVENTARIO COMO CERRADO
@@ -417,128 +420,8 @@ class _ListaProductosState extends State<ListaProductos> {
     );
   }
 
-  Widget generarEstructuraProductos(TstocksInventarios inventarioexistente) {
-    List<TstocksDetallesInventario>? listaProductos =
-        inventarioexistente.detallesInventario;
-
-    return ListView.builder(
-      itemCount: listaProductos!.length,
-      itemBuilder: (context, index) {
-        var cantidad = listaProductos[index].cantidad.toString();
-        var producto = listaProductos[index].descripcionProducto;
-        var descripcionEmpaquet = listaProductos[index].empaquetadoDescripcion;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Card(
-              color: Colors.orange,
-              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Container(
-                padding: EdgeInsets.all(8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Align(
-                            alignment: Alignment.center, // Alineación central
-                            child: Text(
-                              listaProductos[index].descripcionProducto,
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.add_a_photo),
-                                onPressed: () {
-                                  // Acción al presionar el IconButton
-                                },
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(cantidad +
-                                      ' ' +
-                                      listaProductos[index]
-                                          .empaquetadoDescripcion),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.add),
-                      onPressed: () {
-                        buildCounterRow(listaProductos, index);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget buildCounterRow(
-      List<TstocksDetallesInventario> listaProductos, int index) {
-    var number = listaProductos[index].cantidad;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        IconButton(
-          onPressed: null,
-          icon: Container(
-            decoration: BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.horizontal_rule),
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: Colors.black),
-          ),
-          padding: EdgeInsets.all(4),
-          child: Text('$number'),
-        ),
-        IconButton(
-          onPressed: null,
-          icon: Container(
-            decoration: BoxDecoration(
-              color: Colors.green,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.add_circle),
-          ),
-        ),
-        Container(
-          child: Text(listaProductos[index].empaquetadoDescripcion),
-        ),
-      ],
-    );
-  }
-
-
   Future<void> cerrarInventario(TstocksInventarios inventario) async {
+
     var token = usuario.token;
     var iddominio = usuario.iddominio;
     var idinventario = null;
@@ -564,6 +447,12 @@ class _ListaProductosState extends State<ListaProductos> {
       body: body,
     );
 
+    if (response.statusCode == 200) {
+      print('Inventario creado exitosamente');
+    } else {
+      print('Ocurrió un error al cerrar el inventario. Código de estado: ${response.statusCode}');
+    }
+
 
     final getinventarioid = await http.get(
       Uri.parse(
@@ -572,10 +461,10 @@ class _ListaProductosState extends State<ListaProductos> {
     );
 
     for (var data in jsonDecode(getinventarioid.body)) {
+      print(data["id"]);
       if (inventario.idInventario == int.tryParse(data["codigo"]) && inventario.descripcionInventario == data["descripcion"]) {
         idinventario = data["id"] as int;
         break;
-
       }
 
     }
@@ -902,8 +791,14 @@ class _TargetaProducto extends State<TargetasProducto> {
   double cantEmpaquetado2Total = 0;
   String descripcionEmp2 = 'descrip2';
   String descripcionEmp1 = 'descrip1';
-
   get listaProductosTargeta => [];
+
+
+  @override
+  void initState() {
+    super.initState();
+    recogerListaProductos(widget.inventarioexistente);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -934,11 +829,21 @@ class _TargetaProducto extends State<TargetasProducto> {
       listaEmpaquetados.add(listaProductos[indexMapa].empaquetadoDescripcion);
       listaEmpaquetados.add(listaProductos[index].empaquetadoDescripcion);
     }
+    var color;
+    if (listaProductos[index].subcategoriaDescripcion == 'COCINA'){
+      color = Colors.green;
+    }else if (listaProductos[index].subcategoriaDescripcion == 'BEBIDAS'){
+      color = Colors.redAccent;
+    }else if (listaProductos[index].subcategoriaDescripcion == 'CAFETERIA'){
+      color = Colors.brown;
+    }else {
+      color = Colors.orangeAccent;
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Card(
-          color: Colors.cyan,
+          color: color,
           margin: EdgeInsets.symmetric(horizontal: 16, vertical: 15),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -1091,7 +996,9 @@ class _TargetaProducto extends State<TargetasProducto> {
         inventarioexistente.detallesInventario;
     Set<int> idsProductos = {};
     List<TstocksDetallesInventario> listaProductosSinRepetidos = [];
-
+    print('INVENTARIO');
+    print(inventarioexistente.toString());
+//TODO
     for (var producto in listaProductos!) {
       if (!idsProductos.contains(producto.idProducto)) {
         idsProductos.add(producto.idProducto);
@@ -1121,12 +1028,21 @@ class _TargetaProducto extends State<TargetasProducto> {
           indiceMapa = mapaProductosRepetidos[idProducto]!;
           repetidos = true;
         }
-
+        var color;
+        if (listaProductos[index].subcategoriaDescripcion == 'COCINA'){
+          color = Colors.green;
+        }else if (listaProductos[index].subcategoriaDescripcion == 'BEBIDAS'){
+          color = Colors.redAccent;
+        }else if (listaProductos[index].subcategoriaDescripcion == 'CAFETERIA'){
+          color = Colors.brown;
+        }else {
+          color = Colors.orangeAccent;
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Card(
-              color: Colors.orangeAccent,
+              color: color,
               margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -1303,6 +1219,13 @@ class _TargetaProducto extends State<TargetasProducto> {
         ],
       ),
     );
+  }
+
+  Future<void> recogerListaProductos(TstocksInventarios inventarioexistente) async {
+    print('RECOGERLISTAPRODUCTOS');
+    List<TstocksDetallesInventario> listaProductos = await DatabaseHelper.instance.filtrarDetallesInventarioPorId(inventarioexistente.idInventario);
+    inventarioexistente.detallesInventario=listaProductos;
+    print(inventarioexistente.detallesInventario.toString());
   }
 
 

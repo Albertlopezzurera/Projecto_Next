@@ -23,7 +23,7 @@ class newInventario extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.indigo,
       ),
-      home: newInvPass(title: 'Nuevo Inventario'),
+      home: newInvPass(title: 'NUEVO INVENTARIO'),
     );
   }
 }
@@ -185,7 +185,10 @@ class _NuevoInventarioState extends State<newInvPass> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Nuevo Inventario'),
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text('NUEVO INVENTARIO'),
+        ),
       ),
       resizeToAvoidBottomInset: false, //Impide que se adapte al teclado
       body: Padding(
@@ -336,8 +339,7 @@ class _NuevoInventarioState extends State<newInvPass> {
                         idTipoInventario: _listaInvTypeID[indicetypeinv] as int, tipoInventarioDescripcion: _listaInvType[indicetypeinv], idEstadoInventario: 1
                         , estadoInventario: "ABIERTO", detallesInventario: <TstocksDetallesInventario>[]
                     );
-                    print('NEW INVENTARIO');
-                    print(inventarioexistente);
+                    DatabaseHelper.instance.insert(inventarioexistente);
                     Navigator.push(
                       context,
                       MaterialPageRoute(

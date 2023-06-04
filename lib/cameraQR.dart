@@ -126,7 +126,10 @@ class _CameraQRState extends State<CameraQR> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Escanear código de barras'),
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text('ESCANEAR CODIGO DE BARRAS'),
+        ),
       ),
       body: Column(
         children: [
@@ -520,11 +523,11 @@ class _CameraQRState extends State<CameraQR> {
         ),
         if (descripcion  == 'c_menor')
           Container(
-            child: Text(tipo.elementAt(4)),
+            child: Text(tipo.elementAt(5)),
           ),
         if (descripcion  == 'c_mayor')
           Container(
-            child: Text(tipo.elementAt(6)),
+            child: Text(tipo.elementAt(8)),
           ),
       ],
     );

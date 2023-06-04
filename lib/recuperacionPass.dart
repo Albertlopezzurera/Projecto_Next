@@ -1,7 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:projectobueno/myapp.dart';
-import 'package:projectobueno/paginaPrincipal.dart';
+import 'package:http/http.dart' as http;
 
 class recuperacionPass extends StatelessWidget {
   @override
@@ -26,6 +27,67 @@ class RecPass extends StatefulWidget {
 }
 
 class _RecuperacionPassState extends State<RecPass> {
+
+  TextEditingController _emailController = new TextEditingController();
+
+  Future<void> recuperarPassword(String email) async {
+    final url = Uri.parse(
+        "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/recuperarPassword/peticionCambioPassword");
+
+    final response = await http.post(
+      url,
+      body: json.encode({"formData": {"email": email}}),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      // La solicitud fue exitosa
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            title: Text("Recuperación de contraseña"),
+            content: Text("Si su e-mail está registrado en el sistema recibira un correo. Revise su buzón de entrada y siga"
+                " los pasos de recuperación de contraseña que se indican."),
+            actions: <Widget>[
+              TextButton(
+                child: Text("Aceptar"),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      // La solicitud no fue exitosa
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            title: Text("ERROR"),
+            content: Text("Ocurrió un error en la solicitud. Código de estado: ${response.statusCode}"),
+            actions: <Widget>[
+              TextButton(
+                child: Text("OK"),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,12 +98,7 @@ class _RecuperacionPassState extends State<RecPass> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
-              textAlign: TextAlign.center,
-              decoration: InputDecoration(
-                hintText: "Dominio",
-              ),
-            ),
-            TextField(
+              controller: _emailController,
               textAlign: TextAlign.center,
               decoration: InputDecoration(
                 hintText: "E-Mail",
@@ -53,11 +110,33 @@ class _RecuperacionPassState extends State<RecPass> {
           margin: EdgeInsets.all(16), // Margen alrededor del botón
           child: ElevatedButton(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => paginaPrincipal(usuario)), //TODO
-              );
+              String email = _emailController.text;
+              if (!email.isEmpty) {
+                recuperarPassword(email);
+              } else {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      title: Text("ERROR"),
+                      content: Text("Error al recuperar.\nRellene el campo!"),
+                      actions: <Widget>[
+                        TextButton(
+                          child: Text("OK"),
+                          onPressed: () {
+                            Navigator.of(context).pop(false);
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+              }
+
             },
             child: Text('Recuperar Contraseña'),
           ),

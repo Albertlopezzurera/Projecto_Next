@@ -24,6 +24,7 @@ const List<String> criteriosOrdenacion = [
 class paginaPrincipal extends StatelessWidget {
   paginaPrincipal(User usuario);
 
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -42,10 +43,11 @@ class PageHome extends StatefulWidget {
 
   @override
   _PageHomeState createState() => _PageHomeState();
+
 }
 
 class _PageHomeState extends State<PageHome> {
-
+  List<TstocksInventarios> listaInventarios = [];
   void retrieveInventarioDB(TstocksInventarios inventario) {
     DatabaseHelper.instance.insert(inventario);
   }
@@ -53,8 +55,14 @@ class _PageHomeState extends State<PageHome> {
     DatabaseHelper.instance.insertDetalles(producto);
   }
 
+  @override
+  void initState() {
+    super.initState();
+    retrieveInventarios();
+    recogerInventarios(listaInventarios);
+  }
 
-  Future<List<TstocksDetallesInventario>> retrieveInventarioDetalles(int idinventario) async { //TODO HE HECHO CAMBIOS
+  Future<List<TstocksDetallesInventario>> retrieveInventarioDetalles(int idinventario) async {
 
     var token = usuario.token;
 
@@ -153,22 +161,17 @@ class _PageHomeState extends State<PageHome> {
           retrieveInventarioDB(inventarioexistente);
           print(inventarioexistente.toString());
         }
-
       }
-
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    retrieveInventarios();
   }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text('Lista de Inventarios'),
+          title: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text('LISTA DE INVENTARIOS'),
+          ),
           actions: <Widget>[
             IconButton(
               icon: const Icon(Icons.add_box_outlined),
@@ -320,54 +323,146 @@ class _PageHomeState extends State<PageHome> {
             ],
           ),
         ),
-        body : generarEstructuraInventarios()
+        body: FutureBuilder<Widget>(
+          future: generarEstructuraInventarios(listaInventarios),
+          builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              // Muestra un indicador de carga mientras se espera la resolución del Future
+              return CircularProgressIndicator();
+            } else if (snapshot.hasError) {
+              // Muestra un widget de error si ocurre un error durante la obtención de los datos
+              return Text('Error al cargar los datos');
+            } else {
+              // El Future se ha resuelto exitosamente, muestra el widget resultante
+              return snapshot.data!;
+            }
+          },
+        )
+
     );
   }
 }
 
-Widget generarEstructuraInventarios(){
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Container(
-        color: Colors.orange,
-        padding: EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              'Inventario de Marzo 2023',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+Future<void> recogerInventarios(List<TstocksInventarios> listaInventarios) async {
+  List<TstocksInventarios> lista = await DatabaseHelper.instance.filtrarInventarios();
+  print(lista.toString());
+  if (lista.isNotEmpty){
+    for (int i=0; i<lista.length;i++){
+      listaInventarios.add(lista.elementAt(i));
+    }
+    print('LISTAINVENTARIOS');
+    print(listaInventarios.toString());
+  }
+}
+
+Future<Widget> generarEstructuraInventarios(List<TstocksInventarios> listaInventarios) async {
+  recogerInventarios(listaInventarios);
+  List<TstocksInventarios> lista = await DatabaseHelper.instance.filtrarInventarios();
+  print(lista.toString());
+  if (lista.isNotEmpty){
+    for (int i=0; i<lista.length;i++){
+      listaInventarios.add(lista.elementAt(i));
+    }
+  }
+  if (listaInventarios.isEmpty){
+    return Container();
+  }
+  Set<int> idsInventario = {};
+  List<TstocksInventarios> listaInventariosNoRepetidos = [];
+
+  for (var inventario in listaInventarios) {
+    if (!idsInventario.contains(inventario.idInventario)) {
+      idsInventario.add(inventario.idInventario);
+      listaInventariosNoRepetidos.add(inventario);
+    }
+  }
+
+  return ListView.builder(
+    itemCount: listaInventariosNoRepetidos.length,
+    itemBuilder: (BuildContext context, int index) {
+      var color;
+      if (listaInventariosNoRepetidos.elementAt(index).tipoInventarioDescripcion == 'Total') {
+        color = Colors.redAccent;
+      } else {
+        color = Colors.orange;
+      }
+      var icon;
+      if (listaInventariosNoRepetidos.elementAt(index).estadoInventario == 'CERRADO') {
+        icon = Icons.mark_email_read;
+      } else {
+        icon = Icons.mark_as_unread;
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          GestureDetector(
+            onTap: () async {
+              if (listaInventariosNoRepetidos.elementAt(index).estadoInventario=='ABIERTO'){
+                List<TstocksDetallesInventario> listaProductos = await DatabaseHelper.instance.filtrarDetallesInventarioPorId(listaInventariosNoRepetidos.elementAt(index).idInventario);
+                listaInventariosNoRepetidos.elementAt(index).detallesInventario=listaProductos;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ListaProductos(usuario,
+                      listaInventariosNoRepetidos.elementAt(index),
+                    ),
+                  ),
+                );
+              }
+            },
+            child: Card(
+              color: color,
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                padding: EdgeInsets.all(8),
+                child: Container(
+                  color: color,
+                  padding: EdgeInsets.all(8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        listaInventariosNoRepetidos.elementAt(index).descripcionInventario.toString(),
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: Icon(icon),
+                            onPressed: () {
+                              // Acción al presionar el IconButton
+                            },
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(listaInventariosNoRepetidos.elementAt(index).tipoInventarioDescripcion.toString() +' '+ listaInventarios[index].almacenDescripcion.toString()),
+                              Text(listaInventariosNoRepetidos.elementAt(index).fechaRealizacionInventario.toString()),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 7),
+                    ],
+                  ),
+                ),
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.mark_email_unread),
-                  onPressed: () {
-                    // Acción al presionar el IconButton
-                  },
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text('Parcial-AlmacenPrinciapal'),
-                    Text('Fecha'),
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(height: 7),
-          ],
-        ),
-      ),
-    ],
+          ),
+        ],
+      );
+    },
   );
 }
+
 
 Future<void> filtrarInventarios(BuildContext context) async {
   final inventarios = await API.getFiltrosInventarios(usuario);

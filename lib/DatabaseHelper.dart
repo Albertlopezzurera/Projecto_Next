@@ -180,9 +180,35 @@ class DatabaseHelper {
     await db.update("TStocksDetallesInventario", inventario.toMap(), where: "linea = ?", whereArgs: [inventario.linea]);
 
   }
-//TODO LIST FILTROS
-// CATEGORIA -> BEBIDAS
-// SUBCATEGORIA
 
+  Future<List<TstocksDetallesInventario>> filtrarDetallesInventarioPorId(int idInventario) async {
+    final db = await instance.database;
+
+    final List<Map<String, dynamic>> detallesMap = await db.query(
+      "TstocksDetallesInventario",
+      where: "idInventario = ?",
+      whereArgs: [idInventario],
+    );
+
+    return List.generate(detallesMap.length, (i) => TstocksDetallesInventario(
+      linea: detallesMap[i]["linea"],
+      idInventario: detallesMap[i]["idInventario"],
+      idUnidadMedida: detallesMap[i]["idUnidadMedida"],
+      descripcionUnidadMedida: detallesMap[i]["descripcionUnidadMedida"],
+      idProducto: detallesMap[i]["idProducto"],
+      descripcionProducto: detallesMap[i]["descripcionProducto"],
+      idAlmacen: detallesMap[i]["idAlmacen"],
+      almacenDescripcion: detallesMap[i]["almacenDescripcion"],
+      idEmpaquetadoProducto: detallesMap[i]["idEmpaquetadoProducto"],
+      empaquetadoDescripcion: detallesMap[i]["empaquetadoDescripcion"],
+      cantidad: double.parse(detallesMap[i]["cantidad"].toString()),
+      idcategoriaprincipal: detallesMap[i]["idCategoriaprincipal"] as int? ?? 0,
+      categoriaprincipaldescripcion: detallesMap[i]["categoriaprincipalDescripcion"],
+      subcategoriaid: detallesMap[i]["idSubcategoria"],
+      subcategoriadescripcion: detallesMap[i]["subcategoriaDescripcion"],
+      cantidadtotal:  double.parse(detallesMap[i]["cantidadtotal"].toString()),
+      cantidadcaja:  double.parse(detallesMap[i]["cantidadcaja"].toString()),
+    ));
+  }
 
 }
