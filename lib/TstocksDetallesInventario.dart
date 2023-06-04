@@ -14,6 +14,9 @@ class TstocksDetallesInventario {
   int _idSubcategoria;
   String _subcategoriaDescripcion;
   double _cantidad;
+  double _cantidadtotal;
+  double _cantidadcaja;
+
 
   TstocksDetallesInventario({
     required int linea,
@@ -31,6 +34,8 @@ class TstocksDetallesInventario {
     required int subcategoriaid,
     required String subcategoriadescripcion,
     required double cantidad,
+    required double cantidadtotal,
+    required double cantidadcaja,
   })  : _linea = linea,
         _idInventario = idInventario,
         _idUnidadMedida = idUnidadMedida,
@@ -45,34 +50,10 @@ class TstocksDetallesInventario {
         _categoriaprincipalDescripcion = categoriaprincipaldescripcion,
         _idSubcategoria = subcategoriaid,
         _subcategoriaDescripcion = subcategoriadescripcion,
-        _cantidad = cantidad;
+        _cantidad = cantidad,
+        _cantidadtotal = cantidadtotal,
+        _cantidadcaja = cantidadcaja;
 
-  Map<String, dynamic> toJson() {
-    return {
-      'linea' : _linea,
-      'idInventario_descripcion': {
-        "id": _idInventario,
-      },
-      'idProducto_idUnidadDeMedidaGeneral_nombre': {
-        "id": _idUnidadMedida,
-        "descripcion": _descripcionUnidadMedida
-      },
-      'idAlmacen_descripcion': {
-        'id': _idAlmacen,
-        'descripcion' : _almacenDescripcion
-      },
-      'idEmpaquetadoProducto_descripcion': {
-        "id": _idEmpaquetadoProducto,
-        "descripcion": _empaquetadoDescripcion
-      },
-      'idProducto_nombre': {
-        "id": _idProducto,
-        "descripcion": _descripcionProducto
-      },
-      'cantidadReal' : _cantidad,
-
-    };
-  }
   Map<String, dynamic> toMap() {
     return {
       'linea' : _linea,
@@ -90,6 +71,8 @@ class TstocksDetallesInventario {
       'idSubcategoria' : _idSubcategoria,
       'subcategoriaDescripcion' : _subcategoriaDescripcion,
       'cantidad': _cantidad,
+      'cantidadtotal' : _cantidadtotal,
+      'cantidadcaja': _cantidadcaja,
     };
   }
 
@@ -179,9 +162,21 @@ class TstocksDetallesInventario {
     _idInventario = value;
   }
 
+  double get cantidadtotal => _cantidadtotal;
+
+  set cantidadtotal(double value) {
+    _cantidadtotal = value;
+  }
+
+  double get cantidadcaja => _cantidadcaja;
+
+  set cantidadcaja(double value) {
+    _cantidadcaja = value;
+  }
+
   @override
   String toString() {
-    return 'TstocksDetallesInventario{_linea: $_linea, _idInventario: $_idInventario, _idUnidadMedida: $_idUnidadMedida, _descripcionUnidadMedida: $_descripcionUnidadMedida, _idProducto: $_idProducto, _descripcionProducto: $_descripcionProducto, _idAlmacen: $_idAlmacen, _almacenDescripcion: $_almacenDescripcion, _idEmpaquetadoProducto: $_idEmpaquetadoProducto, _empaquetadoDescripcion: $_empaquetadoDescripcion, _idCategoriaprincipal: $_idCategoriaprincipal, _categoriaprincipalDescripcion: $_categoriaprincipalDescripcion, _idSubcategoria: $_idSubcategoria, _subcategoriaDescripcion: $_subcategoriaDescripcion, _cantidad: $_cantidad}';
+    return 'TstocksDetallesInventario{_linea: $_linea, _idInventario: $_idInventario, _idUnidadMedida: $_idUnidadMedida, _descripcionUnidadMedida: $_descripcionUnidadMedida, _idProducto: $_idProducto, _descripcionProducto: $_descripcionProducto, _idAlmacen: $_idAlmacen, _almacenDescripcion: $_almacenDescripcion, _idEmpaquetadoProducto: $_idEmpaquetadoProducto, _empaquetadoDescripcion: $_empaquetadoDescripcion, _idCategoriaprincipal: $_idCategoriaprincipal, _categoriaprincipalDescripcion: $_categoriaprincipalDescripcion, _idSubcategoria: $_idSubcategoria, _subcategoriaDescripcion: $_subcategoriaDescripcion, _cantidad: $_cantidad, _cantidadtotal: $_cantidadtotal, _cantidadcaja: $_cantidadcaja}';
   }
 }
 

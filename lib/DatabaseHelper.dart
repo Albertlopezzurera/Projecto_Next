@@ -63,6 +63,8 @@ class DatabaseHelper {
       idSubcategoria INTEGER,
       subcategoriaDescripcion INTEGER,
       cantidad INTEGER,
+      cantidadtotal INTEGER,
+      cantidadcaja INTEGER,
       FOREIGN KEY (idInventario) REFERENCES TStocksInventario(idInventario)
     );
     ''');
@@ -140,11 +142,13 @@ class DatabaseHelper {
       almacenDescripcion: detallesMap[i]["almacenDescripcion"],
       idEmpaquetadoProducto: detallesMap[i]["idEmpaquetadoProducto"],
       empaquetadoDescripcion: detallesMap[i]["empaquetadoDescripcion"],
-      cantidad: detallesMap[i]["cantidad"],
-      idcategoriaprincipal: detallesMap[i]["idCategoriaprincipal"],
+      cantidad: double.parse(detallesMap[i]["cantidad"].toString()),
+      idcategoriaprincipal: detallesMap[i]["idCategoriaprincipal"] as int? ?? 0,
       categoriaprincipaldescripcion: detallesMap[i]["categoriaprincipalDescripcion"],
       subcategoriaid: detallesMap[i]["idSubcategoria"],
       subcategoriadescripcion: detallesMap[i]["subcategoriaDescripcion"],
+      cantidadtotal:  double.parse(detallesMap[i]["cantidadtotal"].toString()),
+      cantidadcaja:  double.parse(detallesMap[i]["cantidadcaja"].toString()),
     ));
   }
 
@@ -182,4 +186,3 @@ class DatabaseHelper {
 
 
 }
-

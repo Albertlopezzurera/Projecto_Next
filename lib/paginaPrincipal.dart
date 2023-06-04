@@ -105,6 +105,8 @@ class _PageHomeState extends State<PageHome> {
           subcategoriaid: subcategoriaid,
           subcategoriadescripcion: subcategoriadescripcion,
           cantidad: data?["cantidadReal"] ?? 0,
+          cantidadtotal: data?["cantidadRealTotal"] ?? 0,
+          cantidadcaja: double.tryParse(data["idEmpaquetadoProducto_factorEmpaquetado"]["descripcion"]) ?? 0,
         );
         listaproductos.add(producto);
         retrieveInventarioDetallesDB(producto);

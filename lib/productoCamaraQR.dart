@@ -33,6 +33,10 @@ class productoCamaraQR{
         }
       }
     }
+    for (int i=0; i<productoEscaneado.length; i++){
+      print('PRODUCTO ESCANEADO');
+      print(productoEscaneado[i]);
+    }
     return productoCamaraQR(productoEscaneado: productoEscaneado);
   }
 

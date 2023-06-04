@@ -83,7 +83,6 @@ class _CameraQRState extends State<CameraQR> {
       if (text == 'botellas') {
         _numberBotellas++;
         totalBotellas = totalBotellas+1;
-        print(totalBotellas);
       } else if (text == 'c_menor') {
         _numberCajasMenor++;
         totalCajasMenor = totalCajasMenor + 1;
@@ -98,10 +97,7 @@ class _CameraQRState extends State<CameraQR> {
     setState(() {
       if (identical(text, 'botellas') && totalBotellas > 0) {
         _numberBotellas--;
-        print('TOTALBOTELLAS');
-        print(totalBotellas);
         totalBotellas = totalBotellas - 1;
-        print(totalBotellas);
       } else if (identical(text, 'c_menor') && totalCajasMenor > 0) {
         _numberCajasMenor--;
         totalCajasMenor = totalCajasMenor - 1;
@@ -214,19 +210,19 @@ class _CameraQRState extends State<CameraQR> {
                                   if (infEmpaquet == true)
                                     Column(
                                       children: [
-                                        if (listaEmpaquetados.length == 3)
+                                        if (listaEmpaquetados.length >= 4)
                                           buildCounterRow(
                                             number: _numberBotellas,
                                             descripcion: descripEmp1,
                                             tipo: listaEmpaquetados,
                                           ),
-                                        if (listaEmpaquetados.length == 5)
+                                        if (listaEmpaquetados.length >= 6)
                                           buildCounterRow(
                                             number: _numberCajasMenor,
                                             descripcion: descripEmp2,
                                             tipo: listaEmpaquetados,
                                           ),
-                                        if (listaEmpaquetados.length == 7)
+                                        if (listaEmpaquetados.length == 8)
                                           buildCounterRow(
                                             number: _numberCajasMayor,
                                             descripcion: descripEmp3,
@@ -303,10 +299,11 @@ class _CameraQRState extends State<CameraQR> {
                           TextButton(
                               child: Text("Sí"),
                               onPressed: () async {
-                                if (listaEmpaquetados.length == 3) {
+                                if (listaEmpaquetados.length >= 4) {
                                   String descripcionProducto = listaInfProd[0];
                                   String categoriaPrincipal = listaInfProd[3];
                                   String categoriaSecundaria = listaInfProd[4];
+                                  String factorEmpaquetado = listaEmpaquetados.elementAt(3);
                                   String idCatPrin = listaInfProd[5].toString();
                                   String idCatSec = listaInfProd[6].toString();
                                   int idProducto = int.parse(listaInfProd[2]);
@@ -342,14 +339,20 @@ class _CameraQRState extends State<CameraQR> {
                                     subcategoriadescripcion:
                                         categoriaSecundaria,
                                     cantidad: numBot,
+                                        cantidadcaja: double.parse(factorEmpaquetado),
+                                        cantidadtotal: 0, 
                                   );
-                                  widget.inventarioexistente.detallesInventario!
-                                      .add(liniaProd1);
+                                  setState(() {
+                                    widget.inventarioexistente.detallesInventario!
+                                        .add(liniaProd1);
+                                    DatabaseHelper.instance.insertDetalles(liniaProd1);
+                                  });
                                 }
-                                if (listaEmpaquetados.length == 5) {
+                                if (listaEmpaquetados.length >= 6) {
                                   String descripcionProducto = listaInfProd[0];
                                   String categoriaPrincipal = listaInfProd[3];
                                   String categoriaSecundaria = listaInfProd[4];
+                                  String factorEmpaquetado2 = listaEmpaquetados.elementAt(6);
                                   String idCatPrin = listaInfProd[5].toString();
                                   String idCatSec = listaInfProd[6].toString();
                                   int idProducto = int.parse(listaInfProd[2]);
@@ -386,14 +389,21 @@ class _CameraQRState extends State<CameraQR> {
                                     subcategoriadescripcion:
                                         categoriaSecundaria,
                                     cantidad: numCajMenor,
+                                        cantidadcaja: double.parse(factorEmpaquetado2),
+                                        cantidadtotal: 0,
                                   );
-                                  widget.inventarioexistente.detallesInventario!
-                                      .add(liniaProd2);
+                                  setState(() {
+                                    widget.inventarioexistente.detallesInventario!
+                                        .add(liniaProd2);
+                                    DatabaseHelper.instance.insertDetalles(liniaProd2);
+                                  });
+
                                 }
-                                if (listaEmpaquetados.length == 7) {
+                                if (listaEmpaquetados.length == 8) {
                                   String descripcionProducto = listaInfProd[0];
                                   String categoriaPrincipal = listaInfProd[3];
                                   String categoriaSecundaria = listaInfProd[4];
+                                  String factorEmpaquetado3 = listaEmpaquetados.elementAt(9);
                                   String idCatPrin = listaInfProd[5].toString();
                                   String idCatSec = listaInfProd[6].toString();
                                   int idProducto = int.parse(listaInfProd[2]);
@@ -430,9 +440,15 @@ class _CameraQRState extends State<CameraQR> {
                                     subcategoriadescripcion:
                                         categoriaSecundaria,
                                     cantidad: numCajMayor,
+                                        cantidadcaja: double.parse(factorEmpaquetado3),
+                                        cantidadtotal: 0,
                                   );
-                                  widget.inventarioexistente.detallesInventario!
-                                      .add(liniaProd3);
+                                  setState(() {
+                                    widget.inventarioexistente.detallesInventario!
+                                        .add(liniaProd3);
+                                    DatabaseHelper.instance.insertDetalles(liniaProd3);
+                                  });
+
                                 }
                                 Navigator.pushAndRemoveUntil(
                                 context,
@@ -498,14 +514,15 @@ class _CameraQRState extends State<CameraQR> {
             child: Icon(Icons.add_circle),
           ),
         ),
+        if (descripcion  == 'botellas')
         Container(
           child: Text(tipo.elementAt(2)),
         ),
-        if (tipo.length == 5)
+        if (descripcion  == 'c_menor')
           Container(
             child: Text(tipo.elementAt(4)),
           ),
-        if (tipo.length == 7)
+        if (descripcion  == 'c_mayor')
           Container(
             child: Text(tipo.elementAt(6)),
           ),
@@ -542,5 +559,11 @@ class _CameraQRState extends State<CameraQR> {
         listaEmpaquetados = Set<String>.from(infEmpaquetadoProd);
       });
     }
+    print('LISTA EMPAQUETADOS DENTRO:');
+    for (int i = 0; i<listaEmpaquetados.length; i++){
+      print(listaEmpaquetados.elementAt(i));
+    }
+    print('LISTAEMPAQUETADOS');
+    print(listaEmpaquetados.length);
   }
 }

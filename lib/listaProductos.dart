@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:projectobueno/DatabaseHelper.dart';
 import 'package:projectobueno/TstocksDetallesInventario.dart';
 import 'package:projectobueno/TstocksInventarios.dart';
 import 'package:projectobueno/User.dart';
@@ -10,17 +12,12 @@ import 'package:projectobueno/filtrosProductos.dart';
 import 'package:projectobueno/myapp.dart';
 import 'package:projectobueno/newInventario.dart';
 import 'package:projectobueno/paginaPrincipal.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 import 'llamadaApi.dart';
 
-const List<String> opcionOrdenacion = ['ASC', 'DESC'];
-const List<String> criteriosOrdenacion = [
-  'Codigo',
-  'Descripción',
-  'Categoria',
-  'Categoria/Subcategoria',
-  'Tipo de conservación'
-];
+List<String> listaColores = ['green', 'cyan', 'brown'];
 
 class ListaProductos extends StatefulWidget {
   final User usuario; // Agregar esta línea
@@ -36,7 +33,7 @@ class _ListaProductosState extends State<ListaProductos> {
   bool _isSearching = false;
   String itemSelecionadoCriterio = criteriosOrdenacion.first;
   String itemSelecionadoOpcionOrdenacion = opcionOrdenacion.first;
-
+  List<int> listaProductosTargeta = [];
 
   void _startSearch() {
     setState(() {
@@ -52,7 +49,6 @@ class _ListaProductosState extends State<ListaProductos> {
   }
 
   AppBar buildAppBar(BuildContext context) {
-
     if (_isSearching) {
       return AppBar(
         leading: IconButton(
@@ -99,7 +95,7 @@ class _ListaProductosState extends State<ListaProductos> {
   @override
   Widget build(BuildContext context) {
     print('LISTA PRODUCTOS');
-    print(widget.inventarioexistente);
+    print(widget.inventarioexistente.detallesInventario);
     filtrosProductos;
     return Scaffold(
       appBar: buildAppBar(context),
@@ -243,7 +239,10 @@ class _ListaProductosState extends State<ListaProductos> {
               children: [
                 Expanded(
                   child: Center(
-                    child: widget.inventarioexistente.detallesInventario == null || widget.inventarioexistente.detallesInventario!.isEmpty
+                    child: widget.inventarioexistente.detallesInventario ==
+                                null ||
+                            widget
+                                .inventarioexistente.detallesInventario!.isEmpty
                         ? Container() // Contenedor vacío si detallesInventario es null o está vacío
                         : TargetasProducto(widget.inventarioexistente),
                   ),
@@ -253,11 +252,11 @@ class _ListaProductosState extends State<ListaProductos> {
           ],
         ),
       ),
-      floatingActionButton: Wrap(
-        spacing: 3.0, // Espacio horizontal entre los botones
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(5.0, 0.0, 3.0, 0.0),
+            padding: const EdgeInsets.fromLTRB(23.0, 0.0, 3.0, 0.0),
             child: FloatingActionButton(
               onPressed: () {
                 showDialog(
@@ -299,23 +298,59 @@ class _ListaProductosState extends State<ListaProductos> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(5.0, 0.0, 3.0, 0.0),
+            padding: const EdgeInsets.fromLTRB(15.0, 0.0, 3.0, 0.0),
             child: FloatingActionButton(
-              onPressed: () {
-                // Acción del segundo botón flotante
-                Navigator.push(
-                  context,
-                  //GUARDAR INVENTARIO COMO CERRADO
-                  MaterialPageRoute(
-                      builder: (context) => paginaPrincipal(usuario)),
-                ); //TODO VALIDACIONES
-              },
+              onPressed: () async {
+                if (widget.inventarioexistente.detallesInventario!.isEmpty) {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('ERROR'),
+                        content: Text('No hay productos para guardar'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text('Aceptar'),
+
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }
+                  for (int i = 0; i < widget.inventarioexistente.detallesInventario!.length; i++) {
+                    DatabaseHelper.instance.updateDetalles(widget.inventarioexistente.detallesInventario!.elementAt(i));
+                  }
+                AlertDialog(
+                  title: Text('Confirmacion'),
+                  content: Text('Inventario guardado correctamente'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('Aceptar'),
+                    ),
+                  ],
+                );
+                Future.delayed(Duration(seconds: 3), () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => paginaPrincipal(usuario),
+                      ),
+                    );
+                  }); //TODO VALIDACIONES
+                },
               child: Icon(Icons.save),
               backgroundColor: Colors.greenAccent,
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(5.0, 0.0, 3.0, 0.0),
+            padding: const EdgeInsets.fromLTRB(15.0, 0.0, 3.0, 0.0),
             child: FloatingActionButton(
               onPressed: () {
                 showDialog(
@@ -338,6 +373,10 @@ class _ListaProductosState extends State<ListaProductos> {
                         TextButton(
                           child: Text("Sí"),
                           onPressed: () {
+                            for (int i = 0; i<widget.inventarioexistente.detallesInventario!.length; i++){
+                              DatabaseHelper.instance.updateDetalles(widget.inventarioexistente.detallesInventario!.elementAt(i));
+                            }
+                            cerrarInventario(widget.inventarioexistente);
                             Navigator.push(
                               context,
                               //GUARDAR INVENTARIO COMO CERRADO
@@ -357,23 +396,15 @@ class _ListaProductosState extends State<ListaProductos> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(5.0, 0.0, 3.0, 0.0),
-            child: FloatingActionButton(
-              onPressed: () {
-                // Acción del segundo botón flotante
-              },
-              child: Icon(Icons.add_box_outlined),
-              backgroundColor: Colors.orange,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(5.0, 0.0, 3.0, 0.0),
+            padding: const EdgeInsets.fromLTRB(15.0, 0.0, 3.0, 0.0),
             child: FloatingActionButton(
               onPressed: () {
                 // Acción del segundo botón flotante
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => CameraQR(widget.usuario,widget.inventarioexistente)),
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          CameraQR(widget.usuario, widget.inventarioexistente)),
                 );
               },
               child: Icon(Icons.camera_alt),
@@ -386,9 +417,9 @@ class _ListaProductosState extends State<ListaProductos> {
     );
   }
 
-
   Widget generarEstructuraProductos(TstocksInventarios inventarioexistente) {
-    List<TstocksDetallesInventario>? listaProductos = inventarioexistente.detallesInventario;
+    List<TstocksDetallesInventario>? listaProductos =
+        inventarioexistente.detallesInventario;
 
     return ListView.builder(
       itemCount: listaProductos!.length,
@@ -437,7 +468,10 @@ class _ListaProductosState extends State<ListaProductos> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Text(cantidad + ' ' + listaProductos[index].empaquetadoDescripcion),
+                                  Text(cantidad +
+                                      ' ' +
+                                      listaProductos[index]
+                                          .empaquetadoDescripcion),
                                 ],
                               ),
                             ],
@@ -448,7 +482,7 @@ class _ListaProductosState extends State<ListaProductos> {
                     IconButton(
                       icon: Icon(Icons.add),
                       onPressed: () {
-                        buildCounterRow(listaProductos,index);
+                        buildCounterRow(listaProductos, index);
                       },
                     ),
                   ],
@@ -461,7 +495,8 @@ class _ListaProductosState extends State<ListaProductos> {
     );
   }
 
-  Widget buildCounterRow(List<TstocksDetallesInventario> listaProductos, int index) {
+  Widget buildCounterRow(
+      List<TstocksDetallesInventario> listaProductos, int index) {
     var number = listaProductos[index].cantidad;
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -500,6 +535,104 @@ class _ListaProductosState extends State<ListaProductos> {
         ),
       ],
     );
+  }
+
+
+  Future<void> cerrarInventario(TstocksInventarios inventario) async {
+    var token = usuario.token;
+    var iddominio = usuario.iddominio;
+    var idinventario = null;
+
+    // Construye el cuerpo de la solicitud
+    var body = jsonEncode({
+      "codigo": inventario.idInventario,
+      "descripcion": inventario.descripcionInventario,
+      "fechaRealizacionInventario": inventario.fechaRealizacionInventario,
+      "idAlmacen": {"id": inventario.idAlmacen},
+      "idDominio": {"id": inventario.idDominio},
+      "idEstadoInventario": {"id": inventario.idEstadoInventario, "valor": inventario.estadoInventario},
+      "idTienda": {"id": inventario.idTienda},
+      "idTipoInventario": {"id": inventario.idTipoInventario}
+    });
+
+    final response = await http.post(
+      Uri.parse("https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/inventarios"),
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json"
+      },
+      body: body,
+    );
+
+
+    final getinventarioid = await http.get(
+      Uri.parse(
+          "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/inventarios"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+
+    for (var data in jsonDecode(getinventarioid.body)) {
+      if (inventario.idInventario == int.tryParse(data["codigo"]) && inventario.descripcionInventario == data["descripcion"]) {
+        idinventario = data["id"] as int;
+        break;
+
+      }
+
+    }
+    print(idinventario);
+    print(iddominio);
+
+    /*  var inventariodescripcion = inventario.getDescripcionInventario;
+
+    final bodyproduct = {
+      'idInventario_descripcion': '{"id": $idinventario, "descripcion": $inventariodescripcion}',
+      'idProducto_idUnidadDeMedidaGeneral_nombre': '{"id": 5, "codigo": "00005", "descripcion": "Kilos"}',
+      'idProducto_nombre': '{"id": 1600, "codigo": "000062", "descripcion": "CAFE EN GRANO"}',
+      'cantidadReal': '1',
+      'cantidadTeorica': '0',
+      'fechaHora': '18/05/2023 22:11',
+      'fechaUltimoInventario': '01/12/2019 00:00',
+      'idUbicacion_idAlmacen_descripcion': '{"id": 1, "codigo": "001", "descripcion": "Almacen Principal"}',
+      'idEmpaquetadoProducto_descripcion': '{"id": 8, "codigo": 8, "descripcion": "Caja 12 Kilos"}',
+      'idEmpaquetadoProducto_factorEmpaquetado': '{"id": 8, "codigo": 8, "descripcion": "12"}',
+      'idTiposdetalle_descripcion': '{"id": 1, "codigo": "001", "descripcion": "Empaquetado"}',
+      'idUbicacion_descripcion': '{"id": 1, "codigo": "1", "descripcion": "Ubicacion General"}',
+      'idProducto_idProductoModelo_nombre': '',
+      'idProducto.trazabilidad': 'false',
+      'idProducto.numSerie': 'false',
+      'precioUnidadUltimacompra': '43.56',
+      'importeStockFinalUltimacompra': '43.56',
+      'precioUnidadMediaPonderada': '43.56',
+      'precioUnidadMediaTarifas': '3.63',
+      'importeStockFinalMediaPonderada': '43.56',
+      'importeStockFinalMediaTarifas': '3.63',
+      'informacionStocks': '[{"idUbicacion": {"id": 1, "codigo": "1", "descripcion": "Ubicacion General"}, "cantidad": null, "id": 56, "numerosSerie": []}]',
+      'cantidadRealTotal': '12',
+    };
+
+    final putproducts = await http.post(
+      Uri.parse(
+          "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/detallesInventario"),
+      headers: {"Authorization": "Bearer $token"},
+      body: bodyproduct,
+    );
+
+    if (putproducts.statusCode == 200) {
+      print("PRODUCTO IMPORTADO CON EXITO");
+    } else {
+      print("ERROR PRODUCTO IMPORTADO");
+      print(putproducts.statusCode);
+    }*/
+
+    final responseclose = await http.post(Uri.parse(
+        'https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/inventarios/$idinventario/finalizarInventario?idDominio=$iddominio'),
+        headers: {"Authorization": "Bearer $token"});
+
+    if (responseclose.statusCode == 200) {
+      print('Inventario cerrado exitosamente');
+    } else {
+      print('Ocurrió un error al cerrar el inventario. Código de estado: ${responseclose.statusCode}');
+    }
   }
 
   Future<void> _showFiltrosDialog() async {
@@ -543,7 +676,8 @@ class _ListaProductosState extends State<ListaProductos> {
                   .toList();
           return AlertDialog(
             insetPadding: EdgeInsets.all(5),
-            contentPadding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
+            contentPadding:
+                EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
             title: Text('Filtros'),
             content: SingleChildScrollView(
               child: ListBody(
@@ -621,6 +755,8 @@ class _ListaProductosState extends State<ListaProductos> {
   }
 }
 
+
+
 class CheckboxListTileOption extends StatefulWidget {
   final String title;
 
@@ -693,9 +829,9 @@ class _MyOrderListTileState extends State<MyOrderListTile> {
               isExpanded: true,
               items: widget.criterios
                   .map((criterio) => DropdownMenuItem<String>(
-                value: criterio,
-                child: Text(criterio),
-              ))
+                        value: criterio,
+                        child: Text(criterio),
+                      ))
                   .toList(),
               onChanged: (String? newValue) {
                 setState(() {
@@ -713,13 +849,14 @@ class _MyOrderListTileState extends State<MyOrderListTile> {
               isExpanded: true,
               items: widget.ordenacion
                   .map((ordenacion) => DropdownMenuItem<String>(
-                value: ordenacion,
-                child: Text(ordenacion),
-              ))
+                        value: ordenacion,
+                        child: Text(ordenacion),
+                      ))
                   .toList(),
               onChanged: (String? newValue) {
                 setState(() {
-                  _selectedOrdenacionIndex = widget.ordenacion.indexOf(newValue!);
+                  _selectedOrdenacionIndex =
+                      widget.ordenacion.indexOf(newValue!);
                 });
                 widget.onOrdenacionSelected(_selectedOrdenacionIndex);
               },
@@ -730,13 +867,7 @@ class _MyOrderListTileState extends State<MyOrderListTile> {
       ),
     );
   }
-
-
-
-
 }
-
-
 
 //Funcion para devolver el titulo de filtros
 ListTile buildListTile(String title) {
@@ -760,8 +891,19 @@ class TargetasProducto extends StatefulWidget {
 }
 
 class _TargetaProducto extends State<TargetasProducto> {
-  bool mostrarTarjetaPrincipal = true; // Estado para alternar entre las tarjetas
-  int selectedIndex = 0; // Índice seleccionado
+  bool mostrarTarjetaPrincipal =
+      true; // Estado para alternar entre las tarjetas
+  int selectedIndex = 0;
+  int indexMapa = 0;
+  Map<int, int> mapaProductosRepetidos = {};
+  double cantEmpaquetado1 = 0;
+  double cantEmpaquetado2 = 0;
+  double cantEmpaquetado1Total = 0;
+  double cantEmpaquetado2Total = 0;
+  String descripcionEmp2 = 'descrip2';
+  String descripcionEmp1 = 'descrip1';
+
+  get listaProductosTargeta => [];
 
   @override
   Widget build(BuildContext context) {
@@ -785,113 +927,206 @@ class _TargetaProducto extends State<TargetasProducto> {
     if (listaProductos == null || index >= listaProductos.length) {
       return Container();
     }
+    var idProducto = listaProductos[index].idProducto;
     var number = listaProductos[index].cantidad;
-    return Container(
-      width: double.infinity, // Ancho máximo
-      child: Card(
-        color: Colors.cyan,
-        child: Container(
-          padding: EdgeInsets.all(8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: Text(listaProductos[index].descripcionProducto),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          mostrarTarjetaPrincipal = true;
-                          selectedIndex = index;
-                        });
-                      },
-                      icon: Icon(Icons.minimize),
-                    ),
-                  ),
-                ],
-              ),
-              Text(
-                  '${listaProductos[index].idProducto} ${listaProductos[index].categoriaprincipalDescripcion} ${listaProductos[index].subcategoriaDescripcion}'),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        // Acción al presionar el IconButton de restar
-                        if (number > 0) {
-                          number--;
-                        }
-                      });
-                    },
-                    icon: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
+    List<String> listaEmpaquetados = [];
+    if (mapaProductosRepetidos.containsKey(idProducto)) {
+      listaEmpaquetados.add(listaProductos[indexMapa].empaquetadoDescripcion);
+      listaEmpaquetados.add(listaProductos[index].empaquetadoDescripcion);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Card(
+          color: Colors.cyan,
+          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: EdgeInsets.all(15),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              listaProductos[index].descripcionProducto,
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  listaEmpaquetados = [];
+                                  listaProductos[index].cantidad = number;
+                                  print('ACTUALIZACION DE CANTIDAD');
+                                  print(listaProductos.toString());
+                                  mostrarTarjetaPrincipal = true;
+                                  selectedIndex = index;
+                                });
+                              },
+                              icon: Icon(Icons.minimize),
+                            ),
+                          ),
+                        ],
                       ),
-                      child: Icon(Icons.horizontal_rule),
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.black),
-                    ),
-                    padding: EdgeInsets.all(4),
-                    child: Text('$number'),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        // Acción al presionar el IconButton de sumar
-                        number++;
-                      });
-                    },
-                    icon: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        shape: BoxShape.circle,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.add_a_photo),
+                            onPressed: () {
+                              // Acción al presionar el IconButton
+                            },
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                listaProductos[index].idProducto.toString() +
+                                    '-' +
+                                    listaProductos[index]
+                                        .categoriaprincipalDescripcion +
+                                    '-' +
+                                    listaProductos[index]
+                                        .subcategoriaDescripcion,
+                                style: TextStyle(
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      child: Icon(Icons.add_circle),
-                    ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (listaEmpaquetados.isEmpty &&
+                              !mapaProductosRepetidos.containsKey(idProducto))
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: buildIconButtons(
+                                        cantidad : listaProductos[index].cantidad,
+                                        empaquetado : listaProductos[index]
+                                            .empaquetadoDescripcion,
+                                         valor: descripcionEmp1,
+                                        listaProductos: listaProductos,
+                                        indice: index,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
+                          //TODO AQUI VA EL TEXTO DE DESCRIPCION
+                          if (!listaEmpaquetados.isEmpty)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Row(
+                                  children: [
+                                    Align(
+                                      alignment: Alignment.center,
+                                      child: buildIconButtons(
+                                       cantidad: listaProductos[index].cantidad,
+                                       empaquetado: listaProductos[index]
+                                            .empaquetadoDescripcion,
+                                        valor:  descripcionEmp1,
+                                       listaProductos: listaProductos,
+                                       indice: index,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Align(
+                                      alignment: Alignment.center,
+                                      child: buildIconButtons(
+                                        cantidad: listaProductos[indexMapa].cantidad,
+                                        empaquetado: listaProductos[indexMapa]
+                                            .empaquetadoDescripcion,
+                                         valor: descripcionEmp2,
+                                        listaProductos: listaProductos,
+                                        indice: indexMapa,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            )
+                        ],
+                      ),
+                    ],
                   ),
-                  Container(
-                    child: Text(listaProductos[index].empaquetadoDescripcion),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
-
-
 
   Widget generarEstructuraProductos(TstocksInventarios inventarioexistente) {
     List<TstocksDetallesInventario>? listaProductos =
         inventarioexistente.detallesInventario;
+    Set<int> idsProductos = {};
+    List<TstocksDetallesInventario> listaProductosSinRepetidos = [];
 
+    for (var producto in listaProductos!) {
+      if (!idsProductos.contains(producto.idProducto)) {
+        idsProductos.add(producto.idProducto);
+        listaProductosSinRepetidos.add(producto);
+      }
+    }
+
+    for (int i = 0; i < listaProductos!.length; i++) {
+      var idProdRepetido = listaProductos[i].idProducto;
+      print(listaProductos[i].idProducto);
+      for (int j = i + 1; j < listaProductos.length; j++) {
+        var idProdLeer = listaProductos[j].idProducto;
+        if (idProdRepetido == idProdLeer) {
+          // Se encontró un producto con el mismo idProducto
+          mapaProductosRepetidos[idProdLeer] = j;
+        }
+      }
+    }
     return ListView.builder(
-      itemCount: listaProductos!.length,
+      itemCount: listaProductosSinRepetidos.length,
       itemBuilder: (context, index) {
         var cantidad = listaProductos[index].cantidad.toString();
+        var idProducto = listaProductos[index].idProducto;
+        int indiceMapa = 0;
+        bool repetidos = false;
+        if (mapaProductosRepetidos.containsKey(idProducto)) {
+          indiceMapa = mapaProductosRepetidos[idProducto]!;
+          repetidos = true;
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Card(
-              color: Colors.orange,
+              color: Colors.orangeAccent,
               margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -927,14 +1162,35 @@ class _TargetaProducto extends State<TargetasProducto> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Text(
+                                  if (!mapaProductosRepetidos
+                                      .containsKey(idProducto))
+                                    Text(
+                                        cantidad +
+                                            ' ' +
+                                            listaProductos[index]
+                                                .empaquetadoDescripcion,
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                        )),
+                                  if (mapaProductosRepetidos
+                                          .containsKey(idProducto) &&
+                                      repetidos == true)
+                                    Text(
                                       cantidad +
                                           ' ' +
                                           listaProductos[index]
+                                              .empaquetadoDescripcion +
+                                          '; \n' +
+                                          listaProductos[indiceMapa]
+                                              .cantidad
+                                              .toString() +
+                                          ' ' +
+                                          listaProductos[indiceMapa]
                                               .empaquetadoDescripcion,
                                       style: TextStyle(
                                         color: Colors.black,
-                                      )),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ],
@@ -948,6 +1204,13 @@ class _TargetaProducto extends State<TargetasProducto> {
                         setState(() {
                           mostrarTarjetaPrincipal = false;
                           selectedIndex = index;
+                          indexMapa = indiceMapa;
+                          if (!mapaProductosRepetidos.containsKey(idProducto)) {
+                            cantEmpaquetado1Total = double.parse(cantidad);
+                          } else {
+                            cantEmpaquetado1Total = double.parse(cantidad);
+                            cantEmpaquetado2Total = listaProductos[indiceMapa].cantidad;
+                          }
                         });
                       },
                     ),
@@ -960,5 +1223,87 @@ class _TargetaProducto extends State<TargetasProducto> {
       },
     );
   }
-}
 
+  Widget buildIconButtons( {
+  required double cantidad,
+  required String empaquetado,
+    required String valor,
+  required List<TstocksDetallesInventario> listaProductos,
+    required indice,
+}) {
+    print('LISTAPRODUCTOS');
+    print(listaProductos[indice].cantidad);
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            String nuevoTexto = ''; // Variable para almacenar el nuevo texto ingresado por el usuario
+
+            return AlertDialog(
+              title: Text('Cambiar cantidad'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(empaquetado),
+                  SizedBox(height: 16),
+                  TextField(
+                    onChanged: (value) {
+                      nuevoTexto = value; // Actualizar el nuevo texto cada vez que cambie el TextField
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Ingrese la nueva cantidad',
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Cerrar'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      listaProductos[indice].cantidad=double.parse(nuevoTexto);
+                    });
+                    print(listaProductos[indice].cantidad);
+                    Navigator.of(context).pop();
+                    // Aquí puedes utilizar el valor de 'nuevoTexto' para realizar cualquier acción necesaria
+                  },
+                  child: Text('Aceptar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.black),
+            ),
+            padding: EdgeInsets.all(4),
+            child: Text(listaProductos[indice].cantidad.toString()),
+          ),
+          Text(
+            empaquetado,
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+}
