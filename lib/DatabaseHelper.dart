@@ -2,6 +2,10 @@ import 'package:projectobueno/TstocksDetallesInventario.dart';
 import 'package:projectobueno/TstocksInventarios.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+
+///Clase para el manejamiento de la base de datos en SQLite
+///
+/// [_database] instancia de la base de datos
 class DatabaseHelper {
 
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -10,6 +14,11 @@ class DatabaseHelper {
 
   DatabaseHelper._init();
 
+  ///Getter para obtener la instancia de la base de datos
+  ///
+  ///si esta es nula creara la base de datos [_onCreateDB] con sus respectivas tablas y devuelve la instancia
+  ///si no lo es devuelve la instancia de la base de datos
+  ///
   Future<Database> get database async {
     if (_database != null) return _database!;
 
@@ -18,6 +27,9 @@ class DatabaseHelper {
 
   }
 
+  /// Obtención del path por defecto del SQLite3 procediendo a crear la base de datos
+  /// y pasa a llamar a la funcion [_onCreateDB]
+  /// [filePath] nombre de la base de datos
   Future<Database> _initDB(String filePath) async {
     final databasesPath = await getDatabasesPath();
     final path = join(databasesPath, filePath);
@@ -25,6 +37,7 @@ class DatabaseHelper {
     return await openDatabase(path, version: 1, onCreate: _onCreateDB);
   }
 
+  /// Creación de las tablas
   Future _onCreateDB(Database db, int version) async {
     db.execute('''
         CREATE TABLE IF NOT EXISTS TStocksInventario (
@@ -69,23 +82,27 @@ class DatabaseHelper {
     );
     ''');
   }
+  ///Inserta un nuevo inventario en la tabla de Inventarios
   Future<void> insert(TstocksInventarios inventario) async {
     //Database database = await DatabaseHelper._database);
     final db = await instance.database;
     await db.insert("TStocksInventario", inventario.toMap());
   }
+  ///Elimina un nuevo inventario en la tabla de Inventarios
   Future<void> delete(TstocksInventarios inventario) async {
     final db = await instance.database;
 
     await db.delete("TStocksInventario", where: "idInventario = ?", whereArgs: [inventario.idInventario]);
 
   }
+  ///Actualiza un nuevo inventario en la tabla de Inventarios
   Future<void> update(TstocksInventarios inventario) async {
     final db = await instance.database;
 
     await db.update("TStocksInventario", inventario.toMap(), where: "idInventario = ?", whereArgs: [inventario.idInventario]);
 
   }
+  ///Devuelve una lista de inventarios de la base de datos, SELECT * FROM TStocksInventario
   Future<List<TstocksInventarios>> filtrarInventarios() async {
     final db = await instance.database;
 
@@ -109,7 +126,9 @@ class DatabaseHelper {
         detallesInventario: []
     ));
   }
-  //TODO FITLRADO ESTADO TIENDA, TIPO INVENTARIO
+
+  ///Consulta que comprueba si el id inventario pasado por parametro existe en la base de datos
+  ///[idInventario] int - num inv para buscar por id
   Future<bool> filtrarInventarioporId(int idInventario) async {
     final db = await instance.database;
 
@@ -117,6 +136,7 @@ class DatabaseHelper {
     return inventariosMap.isNotEmpty;
   }
 
+  ///Obtiene el maximo idInventario y le suma un digito, para la insercion de un nuevo inventario
   Future<int> obtenerUltimoId() async {
     final db = await instance.database;
 
@@ -127,6 +147,7 @@ class DatabaseHelper {
     return ultimoId + 1;
   }
 
+  ///Devuelve una lista de TstocksDetallesInventario, SELECT * FROM TstocksDetallesInventario
   Future<List<TstocksDetallesInventario>> filtrarDetallesInventario() async {
     final db = await instance.database;
 
@@ -151,7 +172,7 @@ class DatabaseHelper {
       cantidadcaja:  double.parse(detallesMap[i]["cantidadcaja"].toString()),
     ));
   }
-
+  ///Obtiene la maxima linea y le suma un digito, para la insercion de un nuevo producto
   Future<int> obtenerUltimoIdDetalles() async {
     final db = await instance.database;
 
@@ -162,25 +183,30 @@ class DatabaseHelper {
     return ultimoId + 1;
   }
 
-  Future<void> insertDetalles(TstocksDetallesInventario inventario) async {
+  ///Inserta un producto en la base de datos
+  Future<void> insertDetalles(TstocksDetallesInventario producto) async {
     final db = await instance.database;
 
-    await db.insert("TStocksDetallesInventario", inventario.toMap());
+    await db.insert("TStocksDetallesInventario", producto.toMap());
 
   }
-  Future<void> deleteDetalles(TstocksDetallesInventario inventario) async {
+  ///Elimina un producto de la base de datos
+  Future<void> deleteDetalles(TstocksDetallesInventario producto) async {
     final db = await instance.database;
 
-    await db.delete("TStocksDetallesInventario", where: "linea = ?", whereArgs: [inventario.linea]);
+    await db.delete("TStocksDetallesInventario", where: "linea = ?", whereArgs: [producto.linea]);
 
   }
-  Future<void> updateDetalles(TstocksDetallesInventario inventario) async {
+  ///Actualiza un producto de la base de datos
+  Future<void> updateDetalles(TstocksDetallesInventario producto) async {
     final db = await instance.database;
 
-    await db.update("TStocksDetallesInventario", inventario.toMap(), where: "linea = ?", whereArgs: [inventario.linea]);
+    await db.update("TStocksDetallesInventario", producto.toMap(), where: "linea = ?", whereArgs: [producto.linea]);
 
   }
-
+  ///Devuelve una lista de productos filtrados por un parametro.
+  ///
+  /// [idinventario] int - parametro a pasar para filtrar productos con el idinventario pasado por parametro
   Future<List<TstocksDetallesInventario>> filtrarDetallesInventarioPorId(int idInventario) async {
     final db = await instance.database;
 

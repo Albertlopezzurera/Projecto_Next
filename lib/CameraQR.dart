@@ -5,12 +5,17 @@ import 'package:projectobueno/DatabaseHelper.dart';
 import 'package:projectobueno/TstocksDetallesInventario.dart';
 import 'package:projectobueno/TstocksInventarios.dart';
 import 'package:projectobueno/User.dart';
-import 'package:projectobueno/empaquetadosProducto.dart';
-import 'package:projectobueno/listaProductos.dart';
-import 'llamadaApi.dart';
-import 'package:projectobueno/productoCamaraQR.dart';
+import 'package:projectobueno/EmpaquetadosProducto.dart';
+import 'package:projectobueno/ListaProductos.dart';
+import 'LlamadaApi.dart';
+import 'package:projectobueno/ProductoCamaraQR.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
+
+///
+/// Clase CameraQR es la encargada de mostrar al usuario la interfaz del escaneo de productos.
+/// Esta clase como las demás reciben por parametro [usuario] y el [inventarioexistente].
+///
 class CameraQR extends StatefulWidget {
   final User usuario; // Agregar esta línea
   final TstocksInventarios inventarioexistente;
@@ -21,6 +26,14 @@ class CameraQR extends StatefulWidget {
   _CameraQRState createState() => _CameraQRState();
 }
 
+/// Tenemos diferentes variables que son:
+/// [_qrViewControlles , qrKey , _cameraController]: Estas variables hacen referencia a la función de la camara.
+/// [listaInfProd, listaEmpaquetados]: Estas dos variables hacen referencia por un lado a la información basica del producto, como puede ser,
+/// el idProducto, categoria principal, categoria secundaria y por otro lado la información sobre los diferentes empaquetados del producto.
+/// [_scanResult]: Variable que es el resultado del escaneo, en este caso se mostraria el codigo de ean.
+/// Las demas variables es simplemente para tener un control sobre en caso que tenga mas de un empaquetado, poder tener un control sobre las mismas
+/// y asi poder guardar los diferentes empaquetados sin repetirlo.
+///
 class _CameraQRState extends State<CameraQR> {
   late QRViewController _qrViewController;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
@@ -41,14 +54,29 @@ class _CameraQRState extends State<CameraQR> {
   int totalCajasMayor = 1;
 
   void _initializeCamera() async {
-    print('CAMERA QR');
-    print(widget.inventarioexistente);
     WidgetsFlutterBinding.ensureInitialized();
-
     final cameras = await availableCameras();
     if (cameras.isEmpty) {
-      print('No se encontraron cámaras disponibles en el dispositivo.');
-      return;
+      showDialog(
+          context: context,
+          builder: (BuildContext context){
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              title: Text("Error con la camara"),
+              content: Text("No se ha encontrado ninguna cámara."),
+              actions: <Widget>[
+                TextButton(
+                  child: Text("Aceptar"),
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                ),
+              ],
+            );
+          }
+      );
     }
 
     final firstCamera = cameras.first;
@@ -122,6 +150,19 @@ class _CameraQRState extends State<CameraQR> {
     await accederInformacionCodigo(_scanResult);
   }
 
+
+  ///
+  /// Metodo build que nos muestra la interfaz de la clase CameraQR, basicamente tenemos 4 zonas de layout diferenciadas:
+  /// 1a: La parte de la camara, que sera la que siempre estará activa para escanear cualquier producto
+  /// 2a: La parte central la cual nos muestra un mensaje informativo y el codigo ean escaneado en ese momento.
+  /// 3a: La parte inferior que es donde se muestra los diferentes empaquetados para modificar las cantidades.
+  /// 4a: La parte inferior de la pantalla donde encontramos los FloatingActionButton encargados por un lado de:
+  /// - Guardar el producto en ese inventario con el botón de la derecha.
+  /// - Volver a la pantalla de lista de productos con el botón de la izquierda.
+  ///
+  /// Comentar que el botón de la derecha hay que presionarlo cada vez que se escanee un producto para asi guardarlo en la BD local,
+  /// si no se presiona ese botón, el producto no queda guardado en el inventario y por lo tanto no constaria.
+  ///
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -362,9 +403,9 @@ class _CameraQRState extends State<CameraQR> {
                                   int idInventario =
                                       widget.inventarioexistente.idInventario;
                                   int idEmpaquetadoProd2 =
-                                      int.parse(listaEmpaquetados.elementAt(3));
+                                      int.parse(listaEmpaquetados.elementAt(4));
                                   String descripcionEmpaquetado2 =
-                                      listaEmpaquetados.elementAt(4);
+                                      listaEmpaquetados.elementAt(5);
                                   double numCajMenor =
                                       totalCajasMenor.toDouble();
                                   int ultimoid = await DatabaseHelper.instance
@@ -415,9 +456,9 @@ class _CameraQRState extends State<CameraQR> {
                                   int idInventario =
                                       widget.inventarioexistente.idInventario;
                                   int idEmpaquetadoProd3 =
-                                      int.parse(listaEmpaquetados.elementAt(5));
+                                      int.parse(listaEmpaquetados.elementAt(7));
                                   String descripcionEmpaquetado3 =
-                                      listaEmpaquetados.elementAt(6);
+                                      listaEmpaquetados.elementAt(8);
                                   double numCajMayor =
                                       totalCajasMayor.toDouble();
                                   TstocksDetallesInventario liniaProd3 =
@@ -533,8 +574,10 @@ class _CameraQRState extends State<CameraQR> {
     );
   }
 
-
-
+  ///
+  /// Metodo accederInformacionCodigo que recibe por parametro [scaResult], que es el String del codigo ean leído.
+  /// Hace una llamada a la API para traernos información unicamente del producto, como puede ser su nombre, categorias etc..
+  ///
   Future<void> accederInformacionCodigo(String scanResult) async {
     final listaInformacion = await API.getProductoCamara(widget.usuario);
     final producto = productoCamaraQR.fromJson(listaInformacion, scanResult);
@@ -548,6 +591,12 @@ class _CameraQRState extends State<CameraQR> {
     });
   }
 
+  ///
+  /// Metodo accederDescripEmpaquetado el cual recibe por parametro [codigo] que es un String, que es el idProducto.
+  /// Este método hace una llamada a la API que se encarga de traer unicamente el codigo de empaquetado y los diferentes empaquetados,
+  /// en caso de que tenga varios.
+  /// En el caso contrario que no encuentre ningún empaquetado mostrará una alerta informativa, a pesar de mostrar la alerta podrá continuar con el escaneo
+  ///
   Future<void> accederDescripEmpaquetado(String codigo) async {
     final listaEmpaquetadosProducto =
         await API.getEmpaquetadosProducto(widget.usuario);
@@ -555,18 +604,31 @@ class _CameraQRState extends State<CameraQR> {
         empaquetadosProducto.fromJson(listaEmpaquetadosProducto, codigo);
     List<String> infEmpaquetadoProd = producto.listaEmpaquetados;
     if (infEmpaquetadoProd.length == 0) {
-      print('NO HAY EMPAQUETADO');
+      showDialog(
+          context: context,
+          builder: (BuildContext context){
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              title: Text("Error"),
+              content: Text("No se ha encontrado ningun empaquetado para este producto."),
+              actions: <Widget>[
+                TextButton(
+                  child: Text("Aceptar"),
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                ),
+              ],
+            );
+          }
+      );
     } else {
       setState(() {
         infEmpaquet = true;
         listaEmpaquetados = Set<String>.from(infEmpaquetadoProd);
       });
     }
-    print('LISTA EMPAQUETADOS DENTRO:');
-    for (int i = 0; i<listaEmpaquetados.length; i++){
-      print(listaEmpaquetados.elementAt(i));
-    }
-    print('LISTAEMPAQUETADOS');
-    print(listaEmpaquetados.length);
   }
 }

@@ -1,3 +1,8 @@
+/// Representa la información de un producto en un inventario.
+///
+/// [_cantidad] - double -> para las cantidades tuvimos que ponerle double debido a que al traernos los datos de lineas de inventario de la API.
+/// [_cantidadcaja] - double -> ""
+/// [cantidadtotal] - double -> ""
 class TstocksDetallesInventario {
   int _linea;
   int _idInventario;

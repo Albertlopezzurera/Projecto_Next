@@ -1,5 +1,6 @@
 import 'TstocksDetallesInventario.dart';
 
+/// Representa la clase de Inventario con todos sus campos necesarios.
 class TstocksInventarios {
   int _idInventario;
   int? _identificador;

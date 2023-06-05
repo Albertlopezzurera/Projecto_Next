@@ -2,8 +2,13 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:projectobueno/User.dart';
-import 'filtrosProductos.dart';
+import 'FiltrosProductos.dart';
 
+///
+/// Clase API, encargada de tener las URL, para cada petición.
+/// Tenemos diferentes variables que son [_urlProductos],[_urlInventarios],[_urlEmpaquetadosProducto],[_urlDetallesInventario]
+/// Recibimos en la mayoria de funciones la variable [usuario], la cual extraemos el token y comprobamos que ese usuario y el token sean correctos.
+///
 class API {
   static const String _urlProductos =
       'https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/productos';

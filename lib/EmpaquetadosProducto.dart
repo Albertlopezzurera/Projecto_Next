@@ -1,8 +1,20 @@
-import 'package:flutter/material.dart';
-
+///
+/// Clase empaquetadosProducto encargada de recibir en este caso una variable llamada [listaEmpaquetados].
+/// Esta variable es una List<String> donde almacenaremos de cada producto sus diferentes empaquetados.
+///
+/// Metodo que va leyendo el fichero Json que recibimos de la API donde tenemos un parametro [codigo] que es un String.
+/// La variable codigo es el codigo del producto que hemos escaneado y que queremos conseguir información sobre los diversos empaquetados que tiene.
+/// Hacemos un bucle que recorra el archivo Json.
+/// En este bucle recogemos los campos del Json que nos interesan y se recogen de la siguiente manera:
+/// mapa[''] mapa es la variable que que esta leyendo el Json y dentro de los corchetes va el campo a guardar del Json
+/// Aqui lo que queremos es comprobar los diferentes empaquetados y que no se repitan, como hay productos que pueden tener 1 o mas empaquetados,
+/// aqui miramos esa información y la devolvemos en forma DE List<String>
+///
 class empaquetadosProducto{
   final List<String> listaEmpaquetados;
   empaquetadosProducto({required this.listaEmpaquetados});
+
+
 
   factory empaquetadosProducto.fromJson(List<dynamic> jsonList, String codigo) {
     List<String> empaquetados = [];
@@ -34,10 +46,6 @@ class empaquetadosProducto{
         empaquetados.add(descripcionEmpaquet3);
         empaquetados.add(factorEmpaquetado3);
       }
-    }
-    for (int i=0; i<empaquetados.length; i++){
-      print('empaquetados ESCANEADO');
-      print(empaquetados[i]);
     }
     return empaquetadosProducto(listaEmpaquetados: empaquetados);
   }

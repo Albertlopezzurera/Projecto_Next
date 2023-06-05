@@ -1,15 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:projectobueno/cameraQR.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:projectobueno/User.dart';
-import 'package:projectobueno/paginaPrincipal.dart';
-import 'package:projectobueno/recuperacionPass.dart';
+import 'package:projectobueno/PaginaPrincipal.dart';
+import 'package:projectobueno/RecuperacionPass.dart';
 import 'dart:convert';
 
 var usuario = User();
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -25,28 +23,20 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatelessWidget {
   MyHomePage({required this.title});
-
   String title;
-
   TextEditingController _usuarioController = new TextEditingController();
   TextEditingController _negocioController = new TextEditingController();
   TextEditingController _passwordController = new TextEditingController();
-
   var validado = false;
-
   Future<void> retrieveName() async {
     var token = usuario.token;
-
     final response = await http.get(
       Uri.parse(
           "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/usuarios"),
       headers: {"Authorization": "Bearer $token"},
     );
-
     var data = jsonDecode(response.body);
-
     String domain = _negocioController.text;
-
     for (data in data) {
       if ((usuario.username == data["username"]) &&
           (domain == data["idDominio_descripcion"]["descripcion"])) {
@@ -61,6 +51,11 @@ class MyHomePage extends StatelessWidget {
   }
 
   Future<void> login(BuildContext context) async {
+
+    /**
+     * Metodo login es por el que recogemos el token del usuario para pasarlo por las diferentes actividades
+     */
+
     var grantType = 'password';
     var clientId = 'nexttdirector';
     var username = _usuarioController.text;
@@ -108,7 +103,6 @@ class MyHomePage extends StatelessWidget {
           );
         },
       );
-      //ACTIVAR AQUI ERROR PARA MOSTRAR EN PANTALLA
     }
   }
 
@@ -118,7 +112,10 @@ class MyHomePage extends StatelessWidget {
     String usuario = "";
     return Scaffold(
         appBar: AppBar(
-          title: Text(title),
+          title: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(title),
+          ),
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -148,8 +145,6 @@ class MyHomePage extends StatelessWidget {
             ),
             GestureDetector(
               onTap: () {
-                // Aquí puedes agregar la acción que quieres ejecutar cuando se toque el texto
-                print("Olvidaste la contraseña?");
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => recuperacionPass()),
@@ -184,6 +179,24 @@ class MyHomePage extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => paginaPrincipal(usuario)),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text("Los campos no son válidos"),
+            actions: <Widget>[
+              TextButton(
+                child: Text("OK"),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+              ),
+            ],
+          );
+        },
       );
     }
   }

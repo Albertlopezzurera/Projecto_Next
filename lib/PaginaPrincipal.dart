@@ -1,19 +1,16 @@
-import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:projectobueno/DatabaseHelper.dart';
 import 'package:projectobueno/TstocksInventarios.dart';
 import 'package:projectobueno/User.dart';
-import 'package:projectobueno/filtrosInventario.dart';
-import 'package:projectobueno/listaProductos.dart';
-import 'package:projectobueno/llamadaApi.dart';
-import 'package:projectobueno/myapp.dart';
-import 'package:projectobueno/newInventario.dart';
-
-
+import 'package:projectobueno/FiltrosInventario.dart';
+import 'package:projectobueno/ListaProductos.dart';
+import 'package:projectobueno/LlamadaApi.dart';
+import 'package:projectobueno/Myapp.dart';
+import 'package:projectobueno/NewInventario.dart';
 import 'TstocksDetallesInventario.dart';
+
+
 const List<String> opcionOrdenacion = ['ASC', 'DESC'];
 const List<String> criteriosOrdenacion = [
   'Fecha',
@@ -21,10 +18,13 @@ const List<String> criteriosOrdenacion = [
   'Estado de inventario'
 ];
 
+///
+/// Clase paginaPrincipal la cual extiende de StatelessWidget el equivalente a Activity de Java
+/// Esta clase muestra la pantalla de la lista de inventarios.
+/// Recibe por parametros un objeto de tipo User, el cual contendrá el token para poder hacer peticiones a la API
+///
 class paginaPrincipal extends StatelessWidget {
   paginaPrincipal(User usuario);
-
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -47,7 +47,9 @@ class PageHome extends StatefulWidget {
 }
 
 class _PageHomeState extends State<PageHome> {
+  bool backButton = false;
   List<TstocksInventarios> listaInventarios = [];
+
   void retrieveInventarioDB(TstocksInventarios inventario) {
     DatabaseHelper.instance.insert(inventario);
   }
@@ -55,115 +57,31 @@ class _PageHomeState extends State<PageHome> {
     DatabaseHelper.instance.insertDetalles(producto);
   }
 
+  ///
+  /// Metodo que ejecuta la clase cada vez que carga por primera vez esta vista
+  ///
   @override
   void initState() {
     super.initState();
-    retrieveInventarios();
     recogerInventarios(listaInventarios);
   }
 
-  Future<List<TstocksDetallesInventario>> retrieveInventarioDetalles(int idinventario) async {
-
-    var token = usuario.token;
-
-    final response = await http.get(
-      Uri.parse(
-          "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/detallesInventario"),
-      headers: {"Authorization": "Bearer $token"},
-    );
-    List<TstocksDetallesInventario> listaproductos = [];
-    for (var data in jsonDecode(response.body)) {
-
-      if (idinventario == data["idInventario_descripcion"]["id"] as int) {
-
-        final productos = await API.getFiltrosProductos(usuario);
-        int idproducto = data["idProducto_nombre"]?["id"];
-        int idcategoriaprincipal = 0;
-        String categoriadescripcion = "";
-        int subcategoriaid = 0;
-        String subcategoriadescripcion = "";
-
-        for (int i = 0; i < productos.length; i++) {
-          dynamic elemento = productos[i];
-          if (idproducto == elemento["id"]) {
-            idcategoriaprincipal = elemento["idCategoriaEstadisticas_pathCompleto"]["id"];
-            categoriadescripcion = elemento["idCategoriaEstadisticas_pathCompleto"]["descripcion"];
-            subcategoriaid = elemento["idCategoriaEstadisticas_nombre"]["id"];
-            subcategoriadescripcion = elemento["idCategoriaEstadisticas_nombre"]["descripcion"];
-            break;
-
-          }
-        }
-
-
-        int ultimoid = await DatabaseHelper.instance.obtenerUltimoIdDetalles();
-        TstocksDetallesInventario producto = TstocksDetallesInventario(
-          linea: ultimoid,
-          idInventario: idinventario,
-          idUnidadMedida: data["idProducto_idUnidadDeMedidaGeneral_nombre"]?["id"],
-          descripcionUnidadMedida: data["idProducto_idUnidadDeMedidaGeneral_nombre"]?["descripcion"],
-          idProducto: data["idProducto_nombre"]?["id"],
-          descripcionProducto: data["idProducto_nombre"]?["descripcion"],
-          idAlmacen: data["idUbicacion_idAlmacen_descripcion"]?["id"],
-          almacenDescripcion: data["idUbicacion_idAlmacen_descripcion"]?["descripcion"],
-          idEmpaquetadoProducto: data["idEmpaquetadoProducto_descripcion"]?["id"],
-          empaquetadoDescripcion: data["idEmpaquetadoProducto_descripcion"]?["descripcion"],
-          idcategoriaprincipal: idcategoriaprincipal,
-          categoriaprincipaldescripcion: categoriadescripcion,
-          subcategoriaid: subcategoriaid,
-          subcategoriadescripcion: subcategoriadescripcion,
-          cantidad: data?["cantidadReal"] ?? 0,
-          cantidadtotal: data?["cantidadRealTotal"] ?? 0,
-          cantidadcaja: double.tryParse(data["idEmpaquetadoProducto_factorEmpaquetado"]["descripcion"]) ?? 0,
-        );
-        listaproductos.add(producto);
-        retrieveInventarioDetallesDB(producto);
-      }
-    }
-    return listaproductos;
-
-  }
-
-  Future<void> retrieveInventarios() async {
-    var token = usuario.token;
-
-    final response = await http.get(
-      Uri.parse(
-          "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/inventarios"),
-      headers: {"Authorization": "Bearer $token"},
-    );
-
-
-    for (var data in jsonDecode(response.body)) {
-      if (usuario.iddominio == data["idDominio_descripcion"]["id"] as int) {
-        var isitempty = await DatabaseHelper.instance.filtrarInventarioporId(data["id"]);
-        if (!isitempty) {
-          print(data["descripcion"]);
-          int ultimoid = await DatabaseHelper.instance.obtenerUltimoId();
-          TstocksInventarios
-          inventarioexistente = TstocksInventarios(
-            idInventario: ultimoid,
-            identificador: data["id"],
-            idDominio: data["idDominio_descripcion"]?["id"],
-            dominioDescripcion: data["idDominio_descripcion"]?["descripcion"],
-            descripcionInventario: data["descripcion"],
-            idAlmacen: data["idAlmacen_descripcion"]?["id"],
-            almacenDescripcion: data["idAlmacen_descripcion"]?["descripcion"],
-            idTienda: data["idTienda_descripcion"]?["id"],
-            tiendaDescripcion: data["idTienda_descripcion"]?["descripcion"],
-            fechaRealizacionInventario: data["fechaRealizacionInventario"],
-            idTipoInventario: data["idTipoInventario_descripcion"]?["id"],
-            tipoInventarioDescripcion: data["idTipoInventario_descripcion"]?["descripcion"],
-            idEstadoInventario: data["idEstadoInventario_descripcion"]?["id"],
-            estadoInventario: data["idEstadoInventario_descripcion"]?["descripcion"],
-            detallesInventario: await retrieveInventarioDetalles(data["id"]),
-          );
-          retrieveInventarioDB(inventarioexistente);
-          print(inventarioexistente.toString());
-        }
-      }
-    }
-  }
+  ///
+  /// Layout que se carga para la vista del usuario
+  /// Donde volvemos a encontrarnos una AppBar la cual contiene el titulo de la pantalla, un boton que tiene un icono y un boton en el margen inferior del layout
+  /// el cual contiene una navegacion.
+  /// Todos los botones que se encuentran en el margen inferior se crean a traves de un FloatingActionButton
+  /// Tambien encontramos en la parte superior izquierda un IconButton que se desplega un menu lateral el cual tenemos diferentes opciones.
+  /// En primer lugar encontramos el nombre de usuario junto con el logo de la empresa
+  /// En segundo lugar encontramos una opcion de 'Nuevo inventario'
+  /// En tercer lugar encontramos la opción de 'Lista de inventarios'
+  /// En cuarto lugar encontramos la opción de 'Cerrar Sesión'
+  ///
+  /// Cada boton tiene su respectivo Navigation.push el cual te lleva hasta la actividad de la opción
+  /// Por ultimo tenemos el body:
+  /// Este body es un Listview.builder es una lista que se genera a partir de unos parametros, estos parametros se realizan en la funcion
+  /// [generarEstructuraInventarios], que es lo que el usuario ve en la interfaz, la lista de inventarios
+  ///
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -343,22 +261,32 @@ class _PageHomeState extends State<PageHome> {
   }
 }
 
+///
+/// Metodo recogerInventarios que realiza una instancia a DatabaseHelper para recoger en la variable [lista] la lista de inventarios
+///
 Future<void> recogerInventarios(List<TstocksInventarios> listaInventarios) async {
   List<TstocksInventarios> lista = await DatabaseHelper.instance.filtrarInventarios();
-  print(lista.toString());
   if (lista.isNotEmpty){
     for (int i=0; i<lista.length;i++){
       listaInventarios.add(lista.elementAt(i));
     }
-    print('LISTAINVENTARIOS');
-    print(listaInventarios.toString());
   }
 }
 
+///
+/// Metodo para cargar en una estructura igual para cada inventario una lista de Inventarios
+/// En este caso llamamos al metodo [recogerInventarios] para recoger la informacion y la cantidad de inventarios
+///
+/// Como es posible que tengamos mas de un inventario y queremos evitar errores de repeticion de inventarios al volver a esta pantalla
+/// desde otras actividades, hemos hecho un Set para evitar que tengamos varios inventarios repetidos
+///
+/// Como podemos ver en Listview.Builder tenemos los parametros que hay que pasar que son:
+/// itemCount: Lista que tendra esos inventarios y queremos saber el tamaño para que me haga esta estructura tantas veces como inventarios haya
+/// itemBuilder: Le pasamos el contexto de la actividad y un indice para recoger los elementos sobre ese indice
+///
 Future<Widget> generarEstructuraInventarios(List<TstocksInventarios> listaInventarios) async {
   recogerInventarios(listaInventarios);
   List<TstocksInventarios> lista = await DatabaseHelper.instance.filtrarInventarios();
-  print(lista.toString());
   if (lista.isNotEmpty){
     for (int i=0; i<lista.length;i++){
       listaInventarios.add(lista.elementAt(i));
@@ -463,7 +391,11 @@ Future<Widget> generarEstructuraInventarios(List<TstocksInventarios> listaInvent
   );
 }
 
-
+///
+/// Metodo para cargar los filtros de inventarios haciendo una llamada a la API.
+/// Primero se hace una llamada a la API y con la respuesta llamamos al metodo filtrosInventario que se encuentra en una clase
+/// que busca los campos especificos para mostrar en los filtros
+///
 Future<void> filtrarInventarios(BuildContext context) async {
   final inventarios = await API.getFiltrosInventarios(usuario);
   final List<Inventario> listaInventarios =
@@ -562,6 +494,9 @@ Future<void> filtrarInventarios(BuildContext context) async {
       });
 }
 
+///
+/// Metodo para devolver un texto con un formato especifico
+///
 ListTile buildListTile(String title) {
   return ListTile(
     title: Text(

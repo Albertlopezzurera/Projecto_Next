@@ -1,9 +1,13 @@
 import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+/// Pantalla de recuperación de contraseña.
+///
+/// Esta clase representa la pantalla de recuperación de contraseña en la aplicación.
+/// Proporciona una interfaz para que el usuario ingrese su dirección de correo electrónico
+/// y solicite la recuperación de su contraseña.
 class recuperacionPass extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -16,20 +20,20 @@ class recuperacionPass extends StatelessWidget {
     );
   }
 }
-
 class RecPass extends StatefulWidget {
   final String title;
-
   RecPass({required this.title});
-
   @override
   _RecuperacionPassState createState() => _RecuperacionPassState();
 }
 
 class _RecuperacionPassState extends State<RecPass> {
-
   TextEditingController _emailController = new TextEditingController();
 
+  /// Recupera la contraseña para la dirección de correo electrónico proporcionada.
+  ///
+  /// Hace una solicitud HTTP para solicitar la recuperación de la contraseña asociada a la dirección de correo electrónico.
+  /// Muestra un diálogo de éxito si la solicitud es exitosa, o un diálogo de error si la solicitud falla.
   Future<void> recuperarPassword(String email) async {
     final url = Uri.parse(
         "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/recuperarPassword/peticionCambioPassword");
@@ -134,9 +138,7 @@ class _RecuperacionPassState extends State<RecPass> {
                     );
                   },
                 );
-
               }
-
             },
             child: Text('Recuperar Contraseña'),
           ),

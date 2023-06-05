@@ -1,12 +1,14 @@
+///
+/// Clase filtrosProductos nos procesa el Json recibido por la API y nos devuelve un [jsonList].
+/// Aqui procesamos el Json y cogemos los campos necesarios que queremos para mostrarlo en la pestaña de filtros.
+///
 class filtrosProductos{
   final List<dynamic>json;
   filtrosProductos(this.json);
-
   factory filtrosProductos.fromJson(List<dynamic> jsonList) {
     Set<String> listaCategorias = {};
     Map<String, String> subCategorias = {};
     List<String> tipoConservacion = [];
-
     jsonList.forEach((json) {
       Map<String, dynamic> mapa = json;
       String descripcionCategoria = mapa['idCategoriaEstadisticas_nombre']['descripcion'];
@@ -26,6 +28,5 @@ class filtrosProductos{
     );
     return filtrosProductos(jsonList);
   }
-
 }
 

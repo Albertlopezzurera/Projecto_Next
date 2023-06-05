@@ -1,3 +1,6 @@
+/// Clase User contiene los campos necesarios para iniciar sesion de un usuario.
+///
+/// [_token] -> String -> Para poder recoger datos de la API
 class User {
   String _username;
   int _idusername;

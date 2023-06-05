@@ -1,3 +1,7 @@
+///
+/// Clase productoCamaraQR, que recibe por parametros una List de String que es [productoescaneado],
+/// el cual esta clase se encarga de traer la información del producto.
+///
 class productoCamaraQR{
   final List<String> productoEscaneado;
   productoCamaraQR({required this.productoEscaneado});
@@ -32,10 +36,6 @@ class productoCamaraQR{
           productoEscaneado.add('No hay imágenes');
         }
       }
-    }
-    for (int i=0; i<productoEscaneado.length; i++){
-      print('PRODUCTO ESCANEADO');
-      print(productoEscaneado[i]);
     }
     return productoCamaraQR(productoEscaneado: productoEscaneado);
   }

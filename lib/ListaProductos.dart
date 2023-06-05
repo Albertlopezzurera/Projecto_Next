@@ -6,15 +6,21 @@ import 'package:projectobueno/DatabaseHelper.dart';
 import 'package:projectobueno/TstocksDetallesInventario.dart';
 import 'package:projectobueno/TstocksInventarios.dart';
 import 'package:projectobueno/User.dart';
-import 'package:projectobueno/cameraQR.dart';
-import 'package:projectobueno/filtrosProductos.dart';
-import 'package:projectobueno/myapp.dart';
-import 'package:projectobueno/newInventario.dart';
-import 'package:projectobueno/paginaPrincipal.dart';
+import 'package:projectobueno/CameraQR.dart';
+import 'package:projectobueno/FiltrosProductos.dart';
+import 'package:projectobueno/Myapp.dart';
+import 'package:projectobueno/NewInventario.dart';
+import 'package:projectobueno/PaginaPrincipal.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'llamadaApi.dart';
+import 'LlamadaApi.dart';
 
+///
+/// Esta clase ListaProductos es la encargada de mostrar la interficie de los productos escaneados.
+/// Tenemos unas variables que tenemos que pasarle para poder acceder a esta clase que son:
+/// [usuario]: Esta variable sirve para coger el token del usuario que ha iniciado sesión y poder hacer llamadas a la API.
+/// [inventarioexistente]: Esta variable es el inventario el cual se ha creado o el cual se ha echo click en la pantalla lista de Inventarios.
+///
 class ListaProductos extends StatefulWidget {
   final User usuario; // Agregar esta línea
   final TstocksInventarios inventarioexistente;
@@ -24,11 +30,17 @@ class ListaProductos extends StatefulWidget {
   _ListaProductosState createState() => _ListaProductosState();
 }
 
+
+///
+/// Aqui podemos ver como tenemos diferentes variables que son las siguientes:
+/// [_isSearching]: bool, que sirve para saber si el usuario ha pulsado el icono de lupa y quiere buscar
+/// [listaProductosTargeta]: Esta variable de tipo List<int> y aqui se almacena el id de los Productos
+///
 class _ListaProductosState extends State<ListaProductos> {
+
+
   final TextEditingController _searchQueryController = TextEditingController();
   bool _isSearching = false;
-  String itemSelecionadoCriterio = criteriosOrdenacion.first;
-  String itemSelecionadoOpcionOrdenacion = opcionOrdenacion.first;
   List<int> listaProductosTargeta = [];
 
   void _startSearch() {
@@ -44,6 +56,11 @@ class _ListaProductosState extends State<ListaProductos> {
     });
   }
 
+  ///
+  /// Metodo buildAppBar que sirve basicamente para la busqueda, con el icono de la lupa y un texto en tipo 'Hint' que nos ayuda a saber que es para buscar.
+  /// Este metodo lo que hace es si la variable [_isSearching] es false muestra la interficie como si no estuvieras buscando nada,
+  /// en canvio si es true, muestra un iconButton de una lupa, un texto para saber que hay que escribir lo que se quiere buscar.
+  ///
   AppBar buildAppBar(BuildContext context) {
     if (_isSearching) {
       return AppBar(
@@ -91,12 +108,26 @@ class _ListaProductosState extends State<ListaProductos> {
     }
   }
 
+
+  ///
+  /// Este metodo build nos reproduce la interficie con el menu superior que es el metodo buildAppBar, el menu desplegable izquierdo lateral comentado previamente
+  /// y el [body]: que seria la parte principal de la interficie donde se muestra esas tarjetas de los productos.
+  /// En este body comprobamos si la variable que recibimos de [inventarioexistente] un campo que es detallesInventario (que es donde encontramos los productos)
+  /// si contiene algun producto, en caso de que sea null mostraremos un Container() vacio, en caso de no ser null llamaremos a la clase TarjetaProducto()
+  /// el cual le pasaremos la variable [inventarioexistente].
+  ///
+  /// Por ultimo encontramos la parte de FloatingActionButton el cual tenemos 4 botones:
+  /// 1ero: Cruz con fondo color rojo. Este boton nos lleva a la pagina de lista inventarios pero previamente nos manda una alerta para confirmar si queremos salir sin guardar.
+  /// 2o: Disquet con fondo color verde claro. Este boton se encarga de guardar en la BD local los productos para este inventario.
+  /// En caso de no haber ningun producto escaneado, nos muestra una alerta conforme no se puede guardar ya que no hay productos,
+  /// en caso contrario nos hace el update en la BD local y en caso de ser correcto nos muestra una alerta que verifica la subida y nos lleva a lista inventarios
+  /// 3er: Disquete con fondo color verde oscuro. Este boton nos muestra una alerta conforme se cerrara el inventario y por tanto no se podra modificar.
+  /// En caso de hacer click a 'SI', primero se guardara en la BD local y después se subirá a la API.Esta subida la hará el metodo cerrarInventario().
+  /// 4o: Camara con fondo gris. Este boton nos lleva a la pantalla de la camara, para escanear productos.
+  ///
   @override
   Widget build(BuildContext context) {
-    print('LISTA PRODUCTOS');
-    print(widget.inventarioexistente.detallesInventario);
     filtrosProductos;
-
     return Scaffold(
       appBar: buildAppBar(context),
       drawer: Drawer(
@@ -242,7 +273,7 @@ class _ListaProductosState extends State<ListaProductos> {
                     child: widget.inventarioexistente.detallesInventario ==
                                 null
                         ? Container() // Contenedor vacío si detallesInventario es null o está vacío
-                        : TargetasProducto(widget.inventarioexistente),
+                        : TarjetasProducto(widget.inventarioexistente),
                   ),
                 ),
               ],
@@ -318,7 +349,6 @@ class _ListaProductosState extends State<ListaProductos> {
                     },
                   );
                 } else {
-                  print('HOLA');
                   for (int i = 0; i < widget.inventarioexistente.detallesInventario!.length; i++) {
                     DatabaseHelper.instance.updateDetalles(widget.inventarioexistente.detallesInventario!.elementAt(i));
                   }
@@ -357,40 +387,65 @@ class _ListaProductosState extends State<ListaProductos> {
                 showDialog(
                   context: context,
                   builder: (BuildContext context) {
-                    return AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                      title: Text("ATENCIÓN!"),
-                      content: Text(
-                          "Si cierra el inventario no podrá modificarlo \n Desea guardar y cerrar el inventario?"),
-                      actions: <Widget>[
-                        TextButton(
-                          child: Text("No"),
-                          onPressed: () {
-                            Navigator.of(context).pop(false);
-                          },
+                    if (widget.inventarioexistente.detallesInventario!.isNotEmpty) {
+                      return AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.0),
                         ),
-                        TextButton(
-                          child: Text("Sí"),
-                          onPressed: () {
-                            for (int i = 0; i<widget.inventarioexistente.detallesInventario!.length; i++){
-                              DatabaseHelper.instance.updateDetalles(widget.inventarioexistente.detallesInventario!.elementAt(i));
-                            }
-                            cerrarInventario(widget.inventarioexistente);
-                            widget.inventarioexistente.idEstadoInventario=2;
-                            widget.inventarioexistente.estadoInventario='CONFIRMADO';
-                            Navigator.push(
-                              context,
-                              //GUARDAR INVENTARIO COMO CERRADO
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      paginaPrincipal(usuario)),
-                            );
-                          },
+                        title: Text("ATENCIÓN!"),
+                        content: Text(
+                            "Si cierra el inventario no podrá modificarlo \n Desea guardar y cerrar el inventario?"),
+                        actions: <Widget>[
+                          TextButton(
+                            child: Text("No"),
+                            onPressed: () {
+                              Navigator.of(context).pop(false);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        paginaPrincipal(usuario)),
+                              );
+                            },
+                          ),
+                          TextButton(
+                            child: Text("Sí"),
+                            onPressed: () {
+                              widget.inventarioexistente.idEstadoInventario=2;
+                              widget.inventarioexistente.estadoInventario='CONFIRMADO';
+                              DatabaseHelper.instance.update(widget.inventarioexistente);
+                              for (int i = 0; i<widget.inventarioexistente.detallesInventario!.length; i++){
+                                DatabaseHelper.instance.updateDetalles(widget.inventarioexistente.detallesInventario!.elementAt(i));
+                              }
+                              cerrarInventario(widget.inventarioexistente);
+                              Navigator.push(
+                                context,
+                                //GUARDAR INVENTARIO COMO CERRADO
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        paginaPrincipal(usuario)),
+                              );
+                            },
+                          ),
+                        ],
+                      );
+                    } else {
+                      return AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.0),
                         ),
-                      ],
-                    );
+                        title: Text("No hay productos en el inventario!"),
+                        content: Text("Porfavor inserte productos para poder cerrar el inventario."),
+                        actions: <Widget>[
+                          TextButton(
+                            child: Text("Aceptar"),
+                            onPressed: () {
+                              Navigator.of(context).pop(false);
+                            },
+                          ),
+                        ],
+                      );
+                    }
                   },
                 );
               },
@@ -420,22 +475,45 @@ class _ListaProductosState extends State<ListaProductos> {
     );
   }
 
+  ///
+  /// Metodo cerrarInventario el cual recibe por parametro [inventario] el cual es el que recibimos en nuestra clase ListaProductos.
+  /// Aqui se realiza el cerrado de inventario y se sube a la API.
+  /// El codigo comentado es la subida a la API de los productos a ese inventario ya que por tema permisos no se ha podido finalizar.
+  /// En caso que la subida haya sido correcta, nos muestra la alerta comentada previamente y en caso de no ser correcta nos muestra el codigo de error.
+  ///
   Future<void> cerrarInventario(TstocksInventarios inventario) async {
-
     var token = usuario.token;
     var iddominio = usuario.iddominio;
     var idinventario = null;
 
+    final getlatestcodigo = await http.get(
+      Uri.parse(
+          "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/inventarios"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+
+    var maxCodigo = '000';
+
+    for (var data in jsonDecode(getlatestcodigo.body)) {
+      var codigo = data["codigo"] as String;
+      var numbers = int.tryParse(codigo.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+      maxCodigo = numbers > int.parse(maxCodigo) ? numbers.toString() : maxCodigo;
+    }
+
+    var nuevoCodigo = (int.parse(maxCodigo) + 1).toString().padLeft(3, '0');
+
+
+
     // Construye el cuerpo de la solicitud
     var body = jsonEncode({
-      "codigo": inventario.idInventario,
-      "descripcion": inventario.descripcionInventario,
+      "codigo": nuevoCodigo,
+      "descripcion": inventario.descripcionInventario.toString(),
       "fechaRealizacionInventario": inventario.fechaRealizacionInventario,
-      "idAlmacen": {"id": inventario.idAlmacen},
-      "idDominio": {"id": inventario.idDominio},
-      "idEstadoInventario": {"id": inventario.idEstadoInventario, "valor": inventario.estadoInventario},
-      "idTienda": {"id": inventario.idTienda},
-      "idTipoInventario": {"id": inventario.idTipoInventario}
+      "idAlmacen": {"id": inventario.idAlmacen.toString()},
+      "idDominio": {"id": inventario.idDominio.toString()},
+      "idEstadoInventario": {"id": inventario.idEstadoInventario.toString(), "valor": inventario.estadoInventario.toString()},
+      "idTienda": {"id": inventario.idTienda.toString()},
+      "idTipoInventario": {"id": inventario.idTipoInventario.toString()}
     });
 
     final response = await http.post(
@@ -447,13 +525,6 @@ class _ListaProductosState extends State<ListaProductos> {
       body: body,
     );
 
-    if (response.statusCode == 200) {
-      print('Inventario creado exitosamente');
-    } else {
-      print('Ocurrió un error al cerrar el inventario. Código de estado: ${response.statusCode}');
-    }
-
-
     final getinventarioid = await http.get(
       Uri.parse(
           "https://nextt1.pre-api.nexttdirector.net:8443/NexttDirector_NexttApi/inventarios"),
@@ -461,15 +532,14 @@ class _ListaProductosState extends State<ListaProductos> {
     );
 
     for (var data in jsonDecode(getinventarioid.body)) {
-      print(data["id"]);
-      if (inventario.idInventario == int.tryParse(data["codigo"]) && inventario.descripcionInventario == data["descripcion"]) {
+      if (nuevoCodigo == data["codigo"] && inventario.descripcionInventario == data["descripcion"]) {
         idinventario = data["id"] as int;
         break;
       }
 
     }
-    print(idinventario);
-    print(iddominio);
+
+
 
     /*  var inventariodescripcion = inventario.getDescripcionInventario;
 
@@ -518,12 +588,56 @@ class _ListaProductosState extends State<ListaProductos> {
         headers: {"Authorization": "Bearer $token"});
 
     if (responseclose.statusCode == 200) {
-      print('Inventario cerrado exitosamente');
+      showDialog(
+          context: context,
+          builder: (BuildContext context){
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              title: Text("Guardado correctamente"),
+              content: Text("El inventario se ha guardado correctamente."),
+              actions: <Widget>[
+                TextButton(
+                  child: Text("Aceptar"),
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                ),
+              ],
+            );
+          }
+      );
     } else {
-      print('Ocurrió un error al cerrar el inventario. Código de estado: ${responseclose.statusCode}');
+      showDialog(
+          context: context,
+          builder: (BuildContext context){
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              title: Text("Ocurrio un error"),
+              content: Text("Ocurrió un error al cerrar el inventario. Código de estado: ${responseclose.statusCode}"),
+              actions: <Widget>[
+                TextButton(
+                  child: Text("Aceptar"),
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                ),
+              ],
+            );
+          }
+      );
     }
   }
 
+
+  ///
+  /// Metodo _showFiltrosDialog el cual hace una llamada a la API y nos traemos la información que queremos cargar respecto a filtros,
+  /// aqui podemos ver alguno de ellos, como puede ser la categoria principal, categoria secundaria etc.. y los muestra en un metodo
+  /// AlertDialog.
+  ///
   Future<void> _showFiltrosDialog() async {
     final productosJson = await API.getFiltrosProductos(usuario);
     final productos = filtrosProductos.fromJson(productosJson);
@@ -645,7 +759,9 @@ class _ListaProductosState extends State<ListaProductos> {
 }
 
 
-
+///
+/// Clase que es llamada por el metodo _showBuildFiltros() que genera el titulo con un estilo
+///
 class CheckboxListTileOption extends StatefulWidget {
   final String title;
 
@@ -672,6 +788,10 @@ class _CheckboxListTileOptionState extends State<CheckboxListTileOption> {
   }
 }
 
+
+///
+/// Clase para mostrar la parte de criterios de ordenación de los filtros para que se pueda escoger una opción y se quede guardada.
+///
 class MyOrderListTile extends StatefulWidget {
   final String title;
   final List<String> criterios;
@@ -758,7 +878,6 @@ class _MyOrderListTileState extends State<MyOrderListTile> {
   }
 }
 
-//Funcion para devolver el titulo de filtros
 ListTile buildListTile(String title) {
   return ListTile(
     title: Text(
@@ -771,15 +890,31 @@ ListTile buildListTile(String title) {
   );
 }
 
-class TargetasProducto extends StatefulWidget {
+///
+/// Clase TarjetasProducto la cual se encarga de mostrar las tarjetas para cada producto.
+/// Esta clase obtiene la variable [inventarioexistente].
+///
+class TarjetasProducto extends StatefulWidget {
   final TstocksInventarios inventarioexistente;
-  TargetasProducto(this.inventarioexistente);
+  TarjetasProducto(this.inventarioexistente);
 
   @override
   _TargetaProducto createState() => _TargetaProducto();
 }
 
-class _TargetaProducto extends State<TargetasProducto> {
+///
+/// Tenemos diferentes variables unicamente de esta clase que son:
+/// [mostrarTarjetaPrincipal]: bool que sirve para saber si el usuario ha echo click en la tarjeta la cual se mostrara la opcion de
+/// modificar la cantidad y por lo tanto variar el diseño de la tarjeta.
+/// [selectedIndex]: variable int que sirve como indice
+/// [indexMapa]: variable int que sirve para llevar el indice del la variable [mapaProductosRepetidos].
+/// [mapaProductosRepetidos]: Map<int,int> el cual añadimos los productos que estan repetidos en la variable [inventarioexistente].
+/// Esta variable es muy útil ya que si tuvieramos un producto con 3 linias diferentes de empaquetado tendriamos 3 veces repetido el producto,
+/// y por lo tanto deberiamos modificar un empaquetado en un empaquetaod.
+/// Las demas variables como [cantEmpaquetado1, cantEmpaquetado2, descripcionEmp1, descripcionEmp2] sirven como referencia para saber en una tarjeta que tenga
+/// diferentes empaquetados, saber que empaquetado se esta modificando.
+///
+class _TargetaProducto extends State<TarjetasProducto> {
   bool mostrarTarjetaPrincipal =
       true; // Estado para alternar entre las tarjetas
   int selectedIndex = 0;
@@ -794,12 +929,19 @@ class _TargetaProducto extends State<TargetasProducto> {
   get listaProductosTargeta => [];
 
 
+  ///
+  /// Metodo que se realiza al principio cada vez que se llama a la clase TarjetaProducto()
+  /// Que es la funcion de recogerListaProductos, que es cuando te traes los productos del [inventarioexistente]
+  ///
   @override
   void initState() {
     super.initState();
     recogerListaProductos(widget.inventarioexistente);
   }
 
+  ///
+  /// Metodo que dependiendo de la bool [mostrarTarjetaPrincipal] si es true o false muestra un tipo de tarjeta o la de variar la cantidad.
+  ///
   @override
   Widget build(BuildContext context) {
     List<TstocksDetallesInventario>? listaProductos =
@@ -817,6 +959,26 @@ class _TargetaProducto extends State<TargetasProducto> {
     );
   }
 
+  ///
+  /// Metodo buildCounterRow el cual es el metodo que genera la tarjeta que permite modificar la cantidad.
+  /// Este metodo recibe por parametros:
+  /// [listaProductos]: una List de tipo TstocksDetallesInventario
+  /// [index]: indice para saber en que producto se ha echo click.
+  /// Tenemos diferentes variables creadas dentro del propio metodo que son:
+  /// [idProducto]: id del producto que ha echo click el usuario.
+  /// [number]: cantidad del producto que ha echo click el usuario.
+  /// [listaEmpaquetados]: List<String> el cual comprobamos si hay algun elemento en la variable de [mapaProductosRepetidos]
+  /// Tenemos una condicion que si el idProducto, se encuentra en la variable de [mapaProductosRepetidos], se añadira a [listaEmpaquetados].
+  /// [color]: de tipo Color, que sirve para dependiendo de la categoria secundaria, escoger un color u otro.
+  ///
+  /// Posteriormente muestra la forma en la que se va a presentar al usuario de manera visual.
+  /// Tenemos en un lugar un icono y una descripción del producto.
+  /// En la fila de abajo tenemos la opción de modificar la cantidad y la descripción de empaquetado.
+  /// En caso de querer modificar la cantidad podemos hacer click en la descripción del empaquetado y se nos abrirá una alerta
+  /// la cual pondremos unicamente un valor de tipo int y al hacer click a 'Aceptar' se modificará la cantidad.
+  /// La ultima parte del codigo lo que pretende es identificar si el producto tiene diferentes empaquetados, para saber
+  /// que descripción de empaquetado se ha modificado.
+  ///
   Widget buildCounterRow(
       List<TstocksDetallesInventario>? listaProductos, int index) {
     if (listaProductos == null || index >= listaProductos.length) {
@@ -877,8 +1039,6 @@ class _TargetaProducto extends State<TargetasProducto> {
                                 setState(() {
                                   listaEmpaquetados = [];
                                   listaProductos[index].cantidad = number;
-                                  print('ACTUALIZACION DE CANTIDAD');
-                                  print(listaProductos.toString());
                                   mostrarTarjetaPrincipal = true;
                                   selectedIndex = index;
                                 });
@@ -941,7 +1101,6 @@ class _TargetaProducto extends State<TargetasProducto> {
                                 )
                               ],
                             ),
-                          //TODO AQUI VA EL TEXTO DE DESCRIPCION
                           if (!listaEmpaquetados.isEmpty)
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
@@ -991,14 +1150,24 @@ class _TargetaProducto extends State<TargetasProducto> {
     );
   }
 
+  ///
+  /// Esta es la estructura que se genera básica, es decir una vez se escanea un producto y se vuelve a la lista de productos,
+  /// esta es la forma en la que se visualizará la tarjeta.
+  /// Aqui se recibe por parametro la variable [inventarioexistente]
+  /// Tenemos una variable que evita repetir productos que es [Set<int> idsProductos] que almacena idProductos y no se repiten,
+  /// el cual hacemos un bucle que almacenamos los idProductos de todos los productos que tiene este inventario
+  ///
+  /// return ListView.builder, devuelve una lista que depende de la variable [listaProductosSinRepetidos] que es una lista
+  /// que no tiene productos repetidos, para asi evitar que un producto tenga diferentes empaquetados se muestre varias veces.
+  /// El contenido que se genera es en la parte superior de la tarjeta, una descripcion del producto.
+  /// La siguiente fila inferior que se genera es el código del producto junto con la categoria principal y la categoria secundaria.
+  /// Por ultimo encontramos la cantidad de empaquetado y su descripción.
+  ///
   Widget generarEstructuraProductos(TstocksInventarios inventarioexistente) {
     List<TstocksDetallesInventario>? listaProductos =
         inventarioexistente.detallesInventario;
     Set<int> idsProductos = {};
     List<TstocksDetallesInventario> listaProductosSinRepetidos = [];
-    print('INVENTARIO');
-    print(inventarioexistente.toString());
-//TODO
     for (var producto in listaProductos!) {
       if (!idsProductos.contains(producto.idProducto)) {
         idsProductos.add(producto.idProducto);
@@ -1008,7 +1177,6 @@ class _TargetaProducto extends State<TargetasProducto> {
 
     for (int i = 0; i < listaProductos!.length; i++) {
       var idProdRepetido = listaProductos[i].idProducto;
-      print(listaProductos[i].idProducto);
       for (int j = i + 1; j < listaProductos.length; j++) {
         var idProdLeer = listaProductos[j].idProducto;
         if (idProdRepetido == idProdLeer) {
@@ -1140,6 +1308,10 @@ class _TargetaProducto extends State<TargetasProducto> {
     );
   }
 
+  ///
+  /// Metodo buildIconButtons para modificar la cantidad, y notificar cuando el usuario ha echo click en la descripción del empaquetado.
+  /// unicamente cuando la tarjeta tiene el metodo buildCounterRow().
+  ///
   Widget buildIconButtons( {
   required double cantidad,
   required String empaquetado,
@@ -1147,8 +1319,6 @@ class _TargetaProducto extends State<TargetasProducto> {
   required List<TstocksDetallesInventario> listaProductos,
     required indice,
 }) {
-    print('LISTAPRODUCTOS');
-    print(listaProductos[indice].cantidad);
     return GestureDetector(
       onTap: () {
         showDialog(
@@ -1185,7 +1355,6 @@ class _TargetaProducto extends State<TargetasProducto> {
                     setState(() {
                       listaProductos[indice].cantidad=double.parse(nuevoTexto);
                     });
-                    print(listaProductos[indice].cantidad);
                     Navigator.of(context).pop();
                     // Aquí puedes utilizar el valor de 'nuevoTexto' para realizar cualquier acción necesaria
                   },
@@ -1221,11 +1390,14 @@ class _TargetaProducto extends State<TargetasProducto> {
     );
   }
 
+  ///
+  /// Metodo recogerListaProductos recibe por parametro el [inventarioexistente], que es el inventario.
+  /// Hacemos una peticion a la BD local para recibir los productos a través del idInventario, ese resultado de [listaProductos],
+  /// la asignamos a [inventarioexistente.detallesInventario].
+  ///
   Future<void> recogerListaProductos(TstocksInventarios inventarioexistente) async {
-    print('RECOGERLISTAPRODUCTOS');
     List<TstocksDetallesInventario> listaProductos = await DatabaseHelper.instance.filtrarDetallesInventarioPorId(inventarioexistente.idInventario);
     inventarioexistente.detallesInventario=listaProductos;
-    print(inventarioexistente.detallesInventario.toString());
   }
 
 

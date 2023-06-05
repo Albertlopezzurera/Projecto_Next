@@ -1,3 +1,7 @@
+///
+/// Clase filtrosInventario encargada de buscar los filtros relacionados con los inventarios.
+/// Recibe por parametro [inventario], el cual es una List de tipo Inventario.
+///
 class filtrosInventario {
   final List<Inventario> inventario;
 
@@ -24,6 +28,9 @@ class filtrosInventario {
   }
 }
 
+///
+/// Clase Inventario la cual declara los parámetros que tiene que tener un Inventario.
+///
 class Inventario {
   final int idInventario;
   final String nombreTienda;
