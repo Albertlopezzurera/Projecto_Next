@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart' as xml;
 import 'package:projectobueno/User.dart';
-import 'package:projectobueno/PaginaPrincipal.dart';
-import 'package:projectobueno/RecuperacionPass.dart';
+import 'package:projectobueno/ListaInventarios.dart';
+import 'package:projectobueno/RecuperacionPwd.dart';
 import 'dart:convert';
 
 var usuario = User();

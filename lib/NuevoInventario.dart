@@ -6,8 +6,8 @@ import 'package:projectobueno/TstocksDetallesInventario.dart';
 import 'package:projectobueno/TstocksInventarios.dart';
 import 'package:projectobueno/User.dart';
 import 'package:projectobueno/ListaProductos.dart';
-import 'package:projectobueno/Myapp.dart';
-import 'package:projectobueno/PaginaPrincipal.dart';
+import 'package:projectobueno/InicioSesion.dart';
+import 'package:projectobueno/ListaInventarios.dart';
 import 'DatabaseHelper.dart';
 
 /// Clase new inventario contiene un formulario para la creacion de un nuevo inventario

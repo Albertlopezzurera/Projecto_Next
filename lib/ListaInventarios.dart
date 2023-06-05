@@ -6,8 +6,8 @@ import 'package:projectobueno/User.dart';
 import 'package:projectobueno/FiltrosInventario.dart';
 import 'package:projectobueno/ListaProductos.dart';
 import 'package:projectobueno/LlamadaApi.dart';
-import 'package:projectobueno/Myapp.dart';
-import 'package:projectobueno/NewInventario.dart';
+import 'package:projectobueno/InicioSesion.dart';
+import 'package:projectobueno/NuevoInventario.dart';
 import 'TstocksDetallesInventario.dart';
 
 
