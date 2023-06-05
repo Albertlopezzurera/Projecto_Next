@@ -28,6 +28,7 @@ class paginaPrincipal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'INVENTARIO SUPERMERCADO',
       theme: ThemeData(
         primarySwatch: Colors.indigo,
