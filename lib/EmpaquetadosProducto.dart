@@ -6,7 +6,7 @@
 /// La variable codigo es el codigo del producto que hemos escaneado y que queremos conseguir información sobre los diversos empaquetados que tiene.
 /// Hacemos un bucle que recorra el archivo Json.
 /// En este bucle recogemos los campos del Json que nos interesan y se recogen de la siguiente manera:
-/// mapa[] mapa es la variable que que esta leyendo el Json y dentro de los corchetes va el campo a guardar del Json
+/// mapa '' mapa es la variable que que esta leyendo el Json y dentro de los corchetes va el campo a guardar del Json
 /// Aqui lo que queremos es comprobar los diferentes empaquetados y que no se repitan, como hay productos que pueden tener 1 o mas empaquetados,
 /// aqui miramos esa información y la devolvemos en forma DE List<String>
 ///

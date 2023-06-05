@@ -262,7 +262,7 @@ class _PageHomeState extends State<PageHome> {
 }
 
 ///
-/// Metodo recogerInventarios que realiza una instancia a DatabaseHelper para recoger en la variable [lista] la lista de inventarios
+/// Metodo recogerInventarios que realiza una instancia a DatabaseHelper para recoger en la variable 'listaInventarios' la 'lista' de inventarios
 ///
 Future<void> recogerInventarios(List<TstocksInventarios> listaInventarios) async {
   List<TstocksInventarios> lista = await DatabaseHelper.instance.filtrarInventarios();

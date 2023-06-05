@@ -1,5 +1,5 @@
 ///
-/// Clase productoCamaraQR, que recibe por parametros una List de String que es [productoEscaneado],
+/// Clase productoCamaraQR, que recibe por parametros una List de String que es 'productoEscaneado',
 /// el cual esta clase se encarga de traer la información del producto.
 ///
 class productoCamaraQR{

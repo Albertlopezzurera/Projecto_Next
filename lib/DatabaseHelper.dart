@@ -206,7 +206,7 @@ class DatabaseHelper {
   }
   ///Devuelve una lista de productos filtrados por un parametro.
   ///
-  /// [idInventario] int - parametro a pasar para filtrar productos con el idinventario pasado por parametro
+  /// 'idInventario' int - parametro a pasar para filtrar productos con el idinventario pasado por parametro
   Future<List<TstocksDetallesInventario>> filtrarDetallesInventarioPorId(int idInventario) async {
     final db = await instance.database;
 
