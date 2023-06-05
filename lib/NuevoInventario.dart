@@ -2,12 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:projectobueno/TstocksDetallesInventario.dart';
-import 'package:projectobueno/TstocksInventarios.dart';
-import 'package:projectobueno/User.dart';
-import 'package:projectobueno/ListaProductos.dart';
-import 'package:projectobueno/InicioSesion.dart';
-import 'package:projectobueno/ListaInventarios.dart';
+import 'package:InventarioNextt/TstocksDetallesInventario.dart';
+import 'package:InventarioNextt/TstocksInventarios.dart';
+import 'package:InventarioNextt/User.dart';
+import 'package:InventarioNextt/ListaProductos.dart';
+import 'package:InventarioNextt/InicioSesion.dart';
+import 'package:InventarioNextt/ListaInventarios.dart';
 import 'DatabaseHelper.dart';
 
 /// Clase new inventario contiene un formulario para la creacion de un nuevo inventario

@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:projectobueno/DatabaseHelper.dart';
-import 'package:projectobueno/TstocksDetallesInventario.dart';
-import 'package:projectobueno/TstocksInventarios.dart';
-import 'package:projectobueno/User.dart';
-import 'package:projectobueno/EmpaquetadosProducto.dart';
-import 'package:projectobueno/ListaProductos.dart';
+import 'package:InventarioNextt/DatabaseHelper.dart';
+import 'package:InventarioNextt/TstocksDetallesInventario.dart';
+import 'package:InventarioNextt/TstocksInventarios.dart';
+import 'package:InventarioNextt/User.dart';
+import 'package:InventarioNextt/EmpaquetadosProducto.dart';
+import 'package:InventarioNextt/ListaProductos.dart';
 import 'LlamadaApi.dart';
-import 'package:projectobueno/ProductoCamaraQR.dart';
+import 'package:InventarioNextt/ProductoCamaraQR.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 

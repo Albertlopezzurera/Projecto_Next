@@ -1,8 +1,6 @@
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
-import 'package:projectobueno/User.dart';
-import 'FiltrosProductos.dart';
+import 'package:InventarioNextt/User.dart';
 
 ///
 /// Clase API, encargada de tener las URL, para cada petición.

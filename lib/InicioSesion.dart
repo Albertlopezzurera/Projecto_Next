@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart' as xml;
-import 'package:projectobueno/User.dart';
-import 'package:projectobueno/ListaInventarios.dart';
-import 'package:projectobueno/RecuperacionPwd.dart';
+import 'package:InventarioNextt/User.dart';
+import 'package:InventarioNextt/ListaInventarios.dart';
+import 'package:InventarioNextt/RecuperacionPwd.dart';
 import 'dart:convert';
 
 var usuario = User();
@@ -12,6 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'INVENTARIO SUPERMERCADO',
       theme: ThemeData(
         primarySwatch: Colors.indigo,

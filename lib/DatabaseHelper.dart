@@ -1,5 +1,5 @@
-import 'package:projectobueno/TstocksDetallesInventario.dart';
-import 'package:projectobueno/TstocksInventarios.dart';
+import 'package:InventarioNextt/TstocksDetallesInventario.dart';
+import 'package:InventarioNextt/TstocksInventarios.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 

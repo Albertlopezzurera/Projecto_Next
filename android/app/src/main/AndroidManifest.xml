@@ -6,7 +6,7 @@
     <uses-feature android:name="android.hardware.camera.autofocus" />
     />
    <application
-        android:label="projectobueno"
+        android:label="InventarioNextt"
        android:usesCleartextTraffic="true"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

@@ -1,13 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:projectobueno/DatabaseHelper.dart';
-import 'package:projectobueno/TstocksInventarios.dart';
-import 'package:projectobueno/User.dart';
-import 'package:projectobueno/FiltrosInventario.dart';
-import 'package:projectobueno/ListaProductos.dart';
-import 'package:projectobueno/LlamadaApi.dart';
-import 'package:projectobueno/InicioSesion.dart';
-import 'package:projectobueno/NuevoInventario.dart';
+import 'package:InventarioNextt/DatabaseHelper.dart';
+import 'package:InventarioNextt/TstocksInventarios.dart';
+import 'package:InventarioNextt/User.dart';
+import 'package:InventarioNextt/FiltrosInventario.dart';
+import 'package:InventarioNextt/ListaProductos.dart';
+import 'package:InventarioNextt/LlamadaApi.dart';
+import 'package:InventarioNextt/InicioSesion.dart';
+import 'package:InventarioNextt/NuevoInventario.dart';
 import 'TstocksDetallesInventario.dart';
 
 
