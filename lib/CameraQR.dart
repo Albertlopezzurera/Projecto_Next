@@ -324,6 +324,25 @@ class _CameraQRState extends State<CameraQR> {
               alignment: Alignment.bottomRight,
               child: FloatingActionButton(
                 onPressed: () {
+                  if (_scanResult==''){
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context){
+                          return AlertDialog(
+                            title: Text('ERROR'),
+                            content: Text('No hay ningun producto para guardar'),
+                            actions: <Widget>[
+                              TextButton(
+                                child: Text("Aceptar"),
+                                onPressed: () {
+                                  Navigator.of(context).pop(false);
+                                },
+                              ),
+                            ],
+                          );
+                        }
+                    );
+                  }else{
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
@@ -508,6 +527,7 @@ class _CameraQRState extends State<CameraQR> {
                       );
                     },
                   );
+                  }
                 },
                 child: Icon(Icons.check_circle),
                 backgroundColor: Colors.green,
